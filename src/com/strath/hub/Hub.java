@@ -4,8 +4,11 @@ import android.app.Activity;
 import android.bluetooth.BluetoothAdapter;
 import android.content.Intent;
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.Message;
 import android.util.Log;
 import android.widget.Toast;
+import android.widget.TextView;
 
 /** 
  * The main activity and entry-point of the app.
@@ -16,14 +19,26 @@ public class Hub extends Activity
   public static final String TAG = "Hub";
 	private static final boolean Debug = true;
 
+  public static final int MESSAGE_STATE_CHANGE = 1;
+  public static final int MESSAGE_READ  = 2;
+  public static final int MESSAGE_WRITE = 3;
+  public static final int MESSAGE_DEVICE_NAME = 4;
+  public static final int MESSAGE_TOAST = 5;
+
+  public static final String DEVICE_NAME = "device name";
+  public static final String TOAST = "toast";
+  public static final String CONN_LOST = "Connection lost";
+  public static final String CONN_FAIL = "Unable to connect to device";
+
 	private BluetoothAdapter mBluetoothAdapter = null;
 	private BluetoothLinkService mLinkService = null;
+	private String mConnectedDeviceName = null;
 
   /** Called when the activity is first created. */
   @Override
   public void onCreate(Bundle savedInstanceState)
   {
-  	if(Debug) Log.i(TAG, "onCreate called.");
+  	if (Debug) Log.i(TAG, "onCreate called.");
 
     super.onCreate(savedInstanceState);
     setContentView(R.layout.main);
@@ -66,7 +81,7 @@ public class Hub extends Activity
   }
 
   @Override
-  public syncronised void onPause()
+  public synchronized void onPause()
   {
   	super.onPause();
   	if (Debug) Log.i(TAG, "onPause called.");
@@ -79,7 +94,6 @@ public class Hub extends Activity
   	if (Debug) Log.i(TAG, "onStop called.");
   }
 
-
   @Override
   public void onDestroy()
   {
@@ -89,32 +103,110 @@ public class Hub extends Activity
   	// Stop BluetoothLinkService
   	if (mLinkService != null) mLinkService.stop();
   }
+
   /**
-   * Initalise a {@codeBluetoothLinkService} object and call
+   * Initialise a {@codeBluetoothLinkService} object and call
    * {@codeconnectDevice} to initiate a Bluetooth connection.
    *
-   * @see #BluetoothLinkservice(Activity, Handler)
+   * @see #BluetoothLinkService(Activity, Handler)
    * @see #connectDevice()
    */
   private void setupLink()
   {
-    if(Debug) Log.i(TAG, "setupLink called.");
+    if (Debug) Log.i(TAG, "setupLink called.");
 
-    // Stub method for now.
+    // Initialise the BluetoothLinkService
+    mLinkService = new BluetoothLinkService(this, mHandler);
   }
+
+  // Handler to receive information from the BluetoothLinkService
+  private final Handler mHandler = new Handler()
+  {
+    @Override
+    public void handleMessage(Message msg)
+    {
+    	switch (msg.what)
+    	{
+    		case MESSAGE_STATE_CHANGE:
+      		if(Debug) Log.i(TAG, "MESSAGE_STATE_CHANGE: " + msg.arg1);
+      		switch (msg.arg1)
+      		{
+      			case BluetoothLinkService.STATE_CONNECTED:
+      			  setStatus(getString(R.string.title_connected_to,
+      				                  mConnectedDeviceName));
+              break;
+            case BluetoothLinkService.STATE_CONNECTING:
+              setStatus(R.string.title_connecting);
+              break;
+            case BluetoothLinkService.STATE_LISTEN:
+              // [Fix;me: what happens in the listening state?
+              // Is it necessary?]
+              break;
+            case BluetoothLinkService.STATE_NONE:
+              setStatus(R.string.title_not_connected);
+              break;
+      		}
+      		break;
+      	case MESSAGE_WRITE:
+      	  // [Fix;me: is this case necessary?]
+      	  break;
+        case MESSAGE_READ:
+          String readMessage = (String) msg.obj;
+          if (Debug) Log.i(TAG, readMessage);
+          TextView display_bt_data = (TextView) findViewById(R.id.bt_data);
+          display_bt_data.setText(readMessage);
+          break;
+        case MESSAGE_DEVICE_NAME:
+          mConnectedDeviceName = msg.getData().getString(DEVICE_NAME);
+          Toast.makeText(getApplicationContext(),
+          	             "Connected to " + mConnectedDeviceName,
+          	             Toast.LENGTH_SHORT).show();
+          break;
+        case MESSAGE_TOAST:
+          String toast = msg.getData().getString(TOAST);
+          Toast.makeText(getApplicationContext(),
+          	             toast,
+          	             Toast.LENGTH_SHORT).show();
+          if (toast.equals(CONN_LOST) || toast.equals(CONN_FAIL))
+          {
+          	if (Debug) Log.i(TAG, toast);
+          	if (mLinkService != null)
+          	{
+          		connectDevice();
+          	}
+          	else
+          	{
+          		setupLink();
+          		connectDevice();
+          	}
+          }
+          break;
+    	}
+    }
+  };
 
   /**
    * Create a {@codeBluetoothDevice} object representing the slave device,
    * and connect to the device.
    * 
    * @see BluetoothDevice
-   * @see BluetoothLinkservice#connect(BluetoothDevice)
+   * @see BluetoothLinkService#connect(BluetoothDevice)
    */
   private void connectDevice()
   {
-  	if(Debug) Log.i(TAG, "connectDevice called");
+  	if (Debug) Log.i(TAG, "connectDevice called");
 
   	// Stub method for now.
+  }
+
+  private final void setStatus(int resId)
+  {
+    // Stub.
+  }
+
+  private final void setStatus(CharSequence subTitle)
+  {
+    // Stub.
   }
 
 }

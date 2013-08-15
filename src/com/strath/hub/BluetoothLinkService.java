@@ -1,5 +1,7 @@
 package com.strath.hub;
 
+import android.content.Context;
+import android.os.Handler;
 import android.util.Log;
 
 /**
@@ -12,5 +14,20 @@ public class BluetoothLinkService
 	private static final String TAG = "BluetoothLinkService";
 	private static final boolean Debug = true;
 
-	// Stub class for now.
+  public static final int STATE_NONE = 0;
+  public static final int STATE_LISTEN = 1;
+  public static final int STATE_CONNECTING = 2;
+  public static final int STATE_CONNECTED = 3;
+
+	public BluetoothLinkService(Context context, Handler handler)
+	{
+    // Stub.
+	}
+
+  public synchronized void stop()
+  {
+  	if (Debug) Log.i(TAG, "Stop!");
+
+  	// Stub.
+  }
 }
