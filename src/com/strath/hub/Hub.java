@@ -52,8 +52,7 @@ public class Hub extends Activity
     	// Bluetooth is on so set up the link session.
     	else
     	{
-        if (mLinkService == null)
-        	setupLink();
+        if (mLinkService == null) setupLink();
         connectDevice();
     	}
     }
@@ -66,6 +65,30 @@ public class Hub extends Activity
   	if (Debug) Log.i(TAG, "onStart called.");
   }
 
+  @Override
+  public syncronised void onPause()
+  {
+  	super.onPause();
+  	if (Debug) Log.i(TAG, "onPause called.");
+  }
+
+  @Override
+  public void onStop()
+  {
+  	super.onStop();
+  	if (Debug) Log.i(TAG, "onStop called.");
+  }
+
+
+  @Override
+  public void onDestroy()
+  {
+  	super.onDestroy();
+  	if (Debug) Log.i(TAG, "onDestroy called.");
+
+  	// Stop BluetoothLinkService
+  	if (mLinkService != null) mLinkService.stop();
+  }
   /**
    * Initalise a {@codeBluetoothLinkService} object and call
    * {@codeconnectDevice} to initiate a Bluetooth connection.
