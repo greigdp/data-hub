@@ -49,7 +49,7 @@ public class Hub extends Activity
     			                               ACTION_REQUEST_ENABLE);
 
     	}
-    	// Bluetooth is on so set up the link seesion.
+    	// Bluetooth is on so set up the link session.
     	else
     	{
         if (mLinkService == null)
@@ -90,6 +90,8 @@ public class Hub extends Activity
   private void connectDevice()
   {
   	if(Debug) Log.i(TAG, "connectDevice called");
+
+  	// Stub method for now.
   }
 
 }
