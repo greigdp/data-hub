@@ -7,7 +7,9 @@ import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothSocket;
 import android.content.Context;
+import android.os.Bundle;
 import android.os.Handler;
+import android.os.Message;
 import android.util.Log;
 
 /**
@@ -84,7 +86,18 @@ public class BluetoothLinkService
     mConnectThread = new ConnectThread(device);
     mConnectThread.start();
     setState(STATE_CONNECTING);   
-  }  
+  }
+
+  /** Notify the UI activity that a connection attempt failed. */
+  private void connectionFailed()
+  {
+    Message msg = mHandler.obtainMessage(Hub.MESSAGE_TOAST);
+    Bundle bundle = new Bundle();
+    bundle.putString(Hub.TOAST, "Unable to connect to device");
+    msg.setData(bundle);
+    mHandler.sendMessage(msg);
+  }
+
   /**
    * Stop all threads.
    */
@@ -127,7 +140,40 @@ public class BluetoothLinkService
       if (Debug) Log.i(TAG, "BEGIN mConnectThread.\n" + 
                             "SocketType: " + mSocketType);
 
-      // Connect.
+      // Cancel device discovery to prevent it from slowing the connection.
+      mAdapter.cancelDiscovery();
+
+      // Connect to the BluetoothSocket. The call to connect() is a blocking
+      // call and will only return on a successful connection or an 
+      // exception.
+      try
+      {
+        if (Debug) Log.i(TAG, "Trying to connect.");
+        mSocket.connect();
+      }
+      catch (IOException e)
+      {
+        try
+        {
+          mSocket.close();
+        }
+        catch (IOException e2)
+        {
+          Log.e(TAG, "Connection failure. Unable to close socket.\n" + e2);
+        }
+        if (Debug) Log.i(TAG, "Connection failed.");
+        connectionFailed();
+        return;
+      }
+
+      // Reset the ConnectThread
+      synchronized (BluetoothLinkService.this)
+      {
+        mConnectThread = null;
+      }
+
+      // Start the connected thread
+      connected(mSocket, mDevice, mSocketType);
     }
 
     public void cancel()
