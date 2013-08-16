@@ -99,6 +99,21 @@ public class BluetoothLinkService
   }
 
   /**
+   * Manage a Bluetooth link with a ConnectedThread
+   *
+   * @param socket The BluetoothSocket of the link
+   * @param device The BluetoothDevice representing the connected device
+   */
+  // remove socketType here too?
+  public synchronized void connected(BluetoothSocket socket,
+                                     BluetoothDevice device,
+                                     final String socketType)
+  {
+    if (Debug) Log.i(TAG, "Connected.");
+    // Stub.
+  }
+
+  /**
    * Stop all threads.
    */
   public synchronized void stop()
