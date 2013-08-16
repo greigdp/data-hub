@@ -83,7 +83,7 @@ public class BluetoothLinkService
 
     mConnectThread = new ConnectThread(device);
     mConnectThread.start();
-    setState(STATE_CONNECTING);    
+    setState(STATE_CONNECTING);   
   }  
   /**
    * Stop all threads.
@@ -120,6 +120,14 @@ public class BluetoothLinkService
         Log.e(TAG, "Failed to create " + mSocketType + " socket.\n", e);
       }
       mSocket = tmp;
+    }
+
+    public void run()
+    {
+      if (Debug) Log.i(TAG, "BEGIN mConnectThread.\n" + 
+                            "SocketType: " + mSocketType);
+
+      // Connect.
     }
 
     public void cancel()
