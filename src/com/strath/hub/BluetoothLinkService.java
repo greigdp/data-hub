@@ -1,6 +1,11 @@
 package com.strath.hub;
 
+import java.io.IOException;
+import java.util.UUID;
+
+import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
+import android.bluetooth.BluetoothSocket;
 import android.content.Context;
 import android.os.Handler;
 import android.util.Log;
@@ -15,8 +20,15 @@ public class BluetoothLinkService
 	private static final String TAG = "BluetoothLinkService";
 	private static final boolean Debug = true;
 
+  /** Default RFCOMM/SPP UUID */
+  private static final UUID SECURE_UUID = 
+    UUID.fromString("00001101-0000-1000-8000-00805F9B34FB");
+
   private int mState;
   private ConnectThread mConnectThread;
+  private Context mContext;
+  private final BluetoothAdapter mAdapter;
+  private final Handler mHandler;
 
   // States and corresponding values
   public static final int STATE_NONE = 0;
@@ -26,13 +38,16 @@ public class BluetoothLinkService
 
 	public BluetoothLinkService(Context context, Handler handler)
 	{
-    // Stub.
+    mContext = context;
+    mAdapter = BluetoothAdapter.getDefaultAdapter();
+    mState = STATE_NONE;
+    mHandler = handler;
 	}
 
   /** 
    * Set the current state of the link.
    * 
-   * @param state AN integer representing the current state.
+   * @param state An integer representing the current state.
    * See 'states and corresponding values' above.
    */
   private synchronized void setState(int state)
@@ -77,21 +92,46 @@ public class BluetoothLinkService
   {
   	if (Debug) Log.i(TAG, "Stop!");
 
-  	// Stub.
+  	if (mConnectThread != null)
+    {
+      mConnectThread.cancel();
+      mConnectThread = null;
+    }
+    setState(STATE_NONE);
   }
 
   private class ConnectThread extends Thread
   {
-    // Stub.
+    private final BluetoothSocket mSocket;
+    private final BluetoothDevice mDevice;
+    private String mSocketType; // Is this required? All sockets are secure.
 
     public ConnectThread(BluetoothDevice device)
     {
-      // Stub.
+      mDevice = device;
+      BluetoothSocket tmp = null;
+
+      try
+      {
+        tmp = device.createRfcommSocketToServiceRecord(SECURE_UUID);
+      }
+      catch (IOException e)
+      {
+        Log.e(TAG, "Failed to create " + mSocketType + " socket.\n", e);
+      }
+      mSocket = tmp;
     }
 
     public void cancel()
     {
-      // Stub.
+      try
+      {
+        mSocket.close();
+      }
+      catch (IOException e)
+      {
+        Log.e(TAG, "Failed to close " + mSocketType + " socket.\n", e);
+      }
     }
   }
 }
