@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">
-  <string name="app_name">Data Hub
+  <string name="app_name">
+    Data Hub
   </string>
   <string name="title_connecting">
   	Connecting...
@@ -14,4 +15,8 @@
   <string name="no_data">
   	No data received via Bluetooth
   </string>
+  <string name="bt_not_enabled">
+    Bluetooth was not enabled. Quitting the app.
+  </string>
+
 </resources>

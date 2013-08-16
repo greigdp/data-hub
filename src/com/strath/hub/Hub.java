@@ -1,7 +1,9 @@
 package com.strath.hub;
 
+import android.app.ActionBar;
 import android.app.Activity;
 import android.bluetooth.BluetoothAdapter;
+import android.bluetooth.BluetoothDevice;
 import android.content.Intent;
 import android.os.Bundle;
 import android.os.Handler;
@@ -25,10 +27,16 @@ public class Hub extends Activity
   public static final int MESSAGE_DEVICE_NAME = 4;
   public static final int MESSAGE_TOAST = 5;
 
+  private static final int REQUEST_CONNECT_DEVICE_SECURE = 1;
+  private static final int REQUEST_ENABLE_BT = 2;
+
   public static final String DEVICE_NAME = "device name";
   public static final String TOAST = "toast";
   public static final String CONN_LOST = "Connection lost";
   public static final String CONN_FAIL = "Unable to connect to device";
+
+  // Hard code the MAC of the slave. [Fix;me: this should be configurable.]
+  public static final String MAC_ADDRESS = "00:12:06:12:82:84";
 
 	private BluetoothAdapter mBluetoothAdapter = null;
 	private BluetoothLinkService mLinkService = null;
@@ -104,6 +112,33 @@ public class Hub extends Activity
   	if (mLinkService != null) mLinkService.stop();
   }
 
+  public void onActivityResult(int requestCode, int resultCode, Intent data)
+  {
+    if (Debug) Log.i(TAG, "onActivityResult called.\n" +
+                          "resultCode: " + resultCode);
+    switch (requestCode)
+    {
+      case REQUEST_CONNECT_DEVICE_SECURE:
+      // DeviceListActivity returns with a device to connect to.
+        if (resultCode == Activity.RESULT_OK)
+          connectDevice();
+        break;
+      case REQUEST_ENABLE_BT:
+      // The user turns on Bluetooth.
+        if (resultCode == Activity.RESULT_OK)
+          setupLink();
+        else
+        // There was a problem. Log it, alert the user, and quit the app.
+        {
+          Log.e(TAG, "Bluetooth not enabled.");
+          Toast.makeText(this, 
+                         R.string.bt_not_enabled,
+                         Toast.LENGTH_SHORT).show();
+          finish();
+        }
+    }
+  }
+
   /**
    * Initialise a {@codeBluetoothLinkService} object and call
    * {@codeconnectDevice} to initiate a Bluetooth connection.
@@ -133,7 +168,7 @@ public class Hub extends Activity
       		{
       			case BluetoothLinkService.STATE_CONNECTED:
       			  setStatus(getString(R.string.title_connected_to,
-      				                  mConnectedDeviceName));
+      				                    mConnectedDeviceName));
               break;
             case BluetoothLinkService.STATE_CONNECTING:
               setStatus(R.string.title_connecting);
@@ -195,18 +230,21 @@ public class Hub extends Activity
   private void connectDevice()
   {
   	if (Debug) Log.i(TAG, "connectDevice called");
-
-  	// Stub method for now.
+    // Create a Bluetooth device representing the slave and connect to it.
+    BluetoothDevice device = mBluetoothAdapter.getRemoteDevice(MAC_ADDRESS);
+    mLinkService.connect(device);
   }
 
   private final void setStatus(int resId)
   {
-    // Stub.
+    final ActionBar actionBar = getActionBar();
+    actionBar.setSubtitle(resId);
   }
 
   private final void setStatus(CharSequence subTitle)
   {
-    // Stub.
+    final ActionBar actionBar = getActionBar();
+    actionBar.setSubtitle(subTitle);
   }
 
 }
