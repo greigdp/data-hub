@@ -249,97 +249,85 @@ public class BluetoothLinkService
     }
   }
 
-/**
- * Manage a link. All incoming data is parsed here. (Outgoing
- * data would be sent from here too, if required.)
- */
-private class ConnectedThread extends Thread
-{
-  private final BluetoothSocket mSocket;
-  private final InputStream mInStream;
-
-  public ConnectedThread(BluetoothSocket socket)
+  /**
+   * Manage a link. All incoming data is parsed here. (Outgoing
+   * data would be sent from here too, if required.)
+   */
+  private class ConnectedThread extends Thread
   {
-    if (Debug) Log.i(TAG, "Create ConnectedThread.");
-    mSocket = socket;
-    InputStream tmpIn = null;
+    private final BluetoothSocket mSocket;
+    private final InputStream mInStream;  
 
-    // Get the input stream
-    try
+    public ConnectedThread(BluetoothSocket socket)
     {
-      tmpIn = socket.getInputStream();
-    }
-    catch (IOException e)
-    {
-      Log.e(TAG, "Temporary input stream not created.\n" + e);
-    }
+      if (Debug) Log.i(TAG, "Create ConnectedThread.");
+      mSocket = socket;
+      InputStream tmpIn = null;  
 
-    mInStream = tmpIn;
-  }
-
-  public void run()
-  {
-    if (Debug) Log.i(TAG, "BEGIN mConnectedThread.");
-
-    byte[] buffer = new byte[13];
-
-    // Keep listening to the input stream while connected.
-    while (true)
-    {
-      // Create a BufferedReader and read each array of bytes sent over the
-      // link into it using an InputStreamReader.
-      // The format of the data sent from the embedded system is 
-      // timestamp, no. samples per second, x, y, z, t1, t2
+      // Get the input stream
       try
       {
-        BufferedReader reader = new BufferedReader(
-          new InputStreamReader(mInStream));
-        String line;
-
-        while ((line = reader.readLine()) != null)
-        {
-          List<String> data = Arrays.asList(line.split(","));
-          if (data.size() == 7)
-          {
-            if (Debug) Log.i(TAG, "Received Data: " + line);
-
-            // Save data to DB.
-          }
-        if (Debug) Log.i(TAG, "Send " + line + " to the UI activity.");
-        mHandler.obtainMessage(Hub.MESSAGE_READ, line).sendToTarget();
-        }
+        tmpIn = socket.getInputStream();
       }
       catch (IOException e)
       {
-        Log.e(TAG, "Disconnected.\n", e);
-        connectionLost();
-        break;
+        Log.e(TAG, "Temporary input stream not created.\n" + e);
+      }  
+
+      mInStream = tmpIn;
+    }  
+
+    public void run()
+    {
+      if (Debug) Log.i(TAG, "BEGIN mConnectedThread.");  
+
+      byte[] buffer = new byte[13];  
+
+      // Keep listening to the input stream while connected.
+      while (true)
+      {
+        // Create a BufferedReader and read each array of bytes sent over the
+        // link into it using an InputStreamReader.
+        // The format of the data sent from the embedded system is 
+        // timestamp, no. samples per second, x, y, z, t1, t2
+        try
+        {
+          BufferedReader reader = new BufferedReader(
+            new InputStreamReader(mInStream));
+          String line;  
+
+          while ((line = reader.readLine()) != null)
+          {
+            List<String> data = Arrays.asList(line.split(","));
+            if (data.size() == 7)
+            {
+              if (Debug) Log.i(TAG, "Received Data: " + line);  
+
+              // Save data to DB.
+            }
+          if (Debug) Log.i(TAG, "Send " + line + " to the UI activity.");
+          mHandler.obtainMessage(Hub.MESSAGE_READ, line).sendToTarget();
+          }
+        }
+        catch (IOException e)
+        {
+          Log.e(TAG, "Disconnected.\n", e);
+          connectionLost();
+          break;
+        }
+      }
+    }
+
+    public void cancel()
+    {
+      try
+      {
+        mSocket.close();
+      }
+      catch (IOException e)
+      {
+        Log.e(TAG, "Call to close socket failed.\n", e);
       }
     }
   }
-
-  public void cancel()
-  {
-    try
-    {
-      mSocket.close();
-    }
-    catch (IOException e)
-    {
-      Log.e(TAG, "Call to close socket failed.\n", e);
-    }
-  }
-}
-
-
-
-
-
-
-
-
-
-
-
-
 }
