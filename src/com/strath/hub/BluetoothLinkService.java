@@ -124,7 +124,7 @@ public class BluetoothLinkService
     mConnectedThread = new ConnectedThread(socket);
     mConnectedThread.start();
 
-    // Send the name of the connected device back to the UI Activity.
+    // Send the name of the connected device back to the UI activity.
     Message msg = mHandler.obtainMessage(Hub.MESSAGE_DEVICE_NAME);
     Bundle bundle = new Bundle();
     bundle.putString(Hub.DEVICE_NAME, device.getName());
@@ -166,7 +166,7 @@ public class BluetoothLinkService
   {
     Message msg = mHandler.obtainMessage(Hub.MESSAGE_TOAST);
     Bundle bundle = new Bundle();
-    bundle.putString(Hub.TOAST, "Connection lost.");
+    bundle.putString(Hub.TOAST, "Connection lost");
     msg.setData(bundle);
     mHandler.sendMessage(msg);
   }
@@ -304,15 +304,10 @@ private class ConnectedThread extends Thread
             if (Debug) Log.i(TAG, "Received Data: " + line);
 
             // Save data to DB.
-
-            mHandler.obtainMessage(Hub.MESSAGE_READ,
-                                   // 0, // what is this argument for? bytes?
-                                   // -1,
-                                   line
-                                   ).sendToTarget();
           }
+        if (Debug) Log.i(TAG, "Send " + line + " to the UI activity.");
+        mHandler.obtainMessage(Hub.MESSAGE_READ, line).sendToTarget();
         }
-        // Send line to UI here?
       }
       catch (IOException e)
       {

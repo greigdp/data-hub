@@ -56,9 +56,9 @@ public class Hub extends Activity
     mBluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
     if (mBluetoothAdapter == null)
     {
-    	Toast.makeText( this, 
-    		             "Bluetooth is not supported.", 
-    		             Toast.LENGTH_LONG ).show();
+    	Toast.makeText(this, 
+    		             "Bluetooth is not supported", 
+    		             Toast.LENGTH_LONG).show();
     	finish();
     	return;
     }
@@ -130,7 +130,7 @@ public class Hub extends Activity
         else
         // There was a problem. Log it, alert the user, and quit the app.
         {
-          Log.e(TAG, "Bluetooth not enabled.");
+          Log.e(TAG, "Bluetooth not enabled");
           Toast.makeText(this, 
                          R.string.bt_not_enabled,
                          Toast.LENGTH_SHORT).show();
@@ -193,13 +193,14 @@ public class Hub extends Activity
           break;
         case MESSAGE_DEVICE_NAME:
           mConnectedDeviceName = msg.getData().getString(DEVICE_NAME);
-          Toast.makeText(getApplicationContext(),
-          	             "Connected to " + mConnectedDeviceName,
-          	             Toast.LENGTH_SHORT).show();
+          if (Debug) Log.i(TAG, "Connected to " + mConnectedDeviceName);
+          Toast.makeText(Hub.this,
+          	             mConnectedDeviceName.toString(),
+          	             Toast.LENGTH_LONG).show();
           break;
         case MESSAGE_TOAST:
           String toast = msg.getData().getString(TOAST);
-          Toast.makeText(getApplicationContext(),
+          Toast.makeText(Hub.this,
           	             toast,
           	             Toast.LENGTH_SHORT).show();
           if (toast.equals(CONN_LOST) || toast.equals(CONN_FAIL))
