@@ -188,7 +188,7 @@ public class Hub extends Activity
           mConnectedDeviceName = msg.getData().getString(DEVICE_NAME);
           if (Debug) Log.i(TAG, "Connected to " + mConnectedDeviceName);
           Toast.makeText(Hub.this,
-          	             mConnectedDeviceName.toString(),
+          	             mConnectedDeviceName,
           	             Toast.LENGTH_LONG).show();
           break;
         case MESSAGE_TOAST:
