@@ -173,18 +173,11 @@ public class Hub extends Activity
             case BluetoothLinkService.STATE_CONNECTING:
               setStatus(R.string.title_connecting);
               break;
-            case BluetoothLinkService.STATE_LISTEN:
-              // [Fix;me: what happens in the listening state?
-              // Is it necessary?]
-              break;
             case BluetoothLinkService.STATE_NONE:
               setStatus(R.string.title_not_connected);
               break;
       		}
       		break;
-      	case MESSAGE_WRITE:
-      	  // [Fix;me: is this case necessary?]
-      	  break;
         case MESSAGE_READ:
           String readMessage = (String) msg.obj;
           if (Debug) Log.i(TAG, readMessage);
