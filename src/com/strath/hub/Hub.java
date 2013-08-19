@@ -19,7 +19,7 @@ import android.widget.TextView;
 public class Hub extends Activity
 {
   public static final String TAG = "Hub";
-	private static final boolean Debug = true;
+  private static final boolean Debug = true;
 
   public static final int MESSAGE_STATE_CHANGE = 1;
   public static final int MESSAGE_READ  = 2;
@@ -38,15 +38,15 @@ public class Hub extends Activity
   // Hard code the MAC of the slave. [Fix;me: this should be configurable.]
   public static final String MAC_ADDRESS = "00:12:06:12:82:84";
 
-	private BluetoothAdapter mBluetoothAdapter = null;
-	private BluetoothLinkService mLinkService = null;
-	private String mConnectedDeviceName = null;
+  private BluetoothAdapter mBluetoothAdapter = null;
+  private BluetoothLinkService mLinkService = null;
+  private String mConnectedDeviceName = null;
 
   /** Called when the activity is first created. */
   @Override
   public void onCreate(Bundle savedInstanceState)
   {
-  	if (Debug) Log.i(TAG, "onCreate called.");
+    if (Debug) Log.i(TAG, "onCreate called.");
 
     super.onCreate(savedInstanceState);
     setContentView(R.layout.main);
@@ -56,9 +56,9 @@ public class Hub extends Activity
     mBluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
     if (mBluetoothAdapter == null)
     {
-    	Toast.makeText(this, 
-    		             "Bluetooth is not supported", 
-    		             Toast.LENGTH_LONG).show();
+    	Toast.makeText(this,
+                     "Bluetooth is not supported",
+                     Toast.LENGTH_LONG).show();
     	finish();
     	return;
     }
@@ -67,11 +67,10 @@ public class Hub extends Activity
     	// If Bluetooth is not on, request that it be enabled.
     	// setupLink() will then be called during onActivityResult.
     	if (!mBluetoothAdapter.isEnabled())
-    	{
-    		Intent enableIntent = new Intent(BluetoothAdapter.
+      {
+        Intent enableIntent = new Intent(BluetoothAdapter.
     			                               ACTION_REQUEST_ENABLE);
-
-    	}
+      }
     	// Bluetooth is on so set up the link session.
     	else
     	{
@@ -240,5 +239,4 @@ public class Hub extends Activity
     final ActionBar actionBar = getActionBar();
     actionBar.setSubtitle(subTitle);
   }
-
 }
