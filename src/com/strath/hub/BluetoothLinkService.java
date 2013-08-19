@@ -1,6 +1,11 @@
 package com.strath.hub;
 
+import java.io.BufferedReader;
+import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.io.IOException;
+import java.util.Arrays;
+import java.util.List;
 import java.util.UUID;
 
 import android.bluetooth.BluetoothAdapter;
@@ -28,6 +33,7 @@ public class BluetoothLinkService
 
   private int mState;
   private ConnectThread mConnectThread;
+  private ConnectedThread mConnectedThread;
   private Context mContext;
   private final BluetoothAdapter mAdapter;
   private final Handler mHandler;
@@ -88,6 +94,61 @@ public class BluetoothLinkService
     setState(STATE_CONNECTING);   
   }
 
+
+  /**
+   * Manage a Bluetooth link with a ConnectedThread
+   *
+   * @param socket The BluetoothSocket of the link
+   * @param device The BluetoothDevice representing the connected device
+   */
+  public synchronized void connected(BluetoothSocket socket,
+                                     BluetoothDevice device)
+  {
+    if (Debug) Log.i(TAG, "Connected.");
+    
+    // Cancel the connectThread that created the connection.
+    if (mConnectThread != null)
+    {
+      mConnectThread.cancel();
+      mConnectThread = null;
+    }
+    
+    // Cancel any previous ConnectThread instances currently running.
+    if (mConnectedThread != null) 
+    {
+      mConnectedThread.cancel();
+      mConnectedThread = null;
+    }
+
+    // Start a new ConnectedThread
+    mConnectedThread = new ConnectedThread(socket);
+    mConnectedThread.start();
+
+    // Send the name of the connected device back to the UI Activity.
+    Message msg = mHandler.obtainMessage(Hub.MESSAGE_DEVICE_NAME);
+    Bundle bundle = new Bundle();
+    bundle.putString(Hub.DEVICE_NAME, device.getName());
+    msg.setData(bundle);
+    mHandler.sendMessage(msg);
+
+    setState(STATE_CONNECTED);
+  }
+
+  /**
+   * Stop all threads.
+   */
+  public synchronized void stop()
+  {
+    if (Debug) Log.i(TAG, "Stop!");
+
+    if (mConnectThread != null)
+    {
+      mConnectThread.cancel();
+      mConnectThread = null;
+    }
+    setState(STATE_NONE);
+  }
+
   /** Notify the UI activity that a connection attempt failed. */
   private void connectionFailed()
   {
@@ -99,40 +160,25 @@ public class BluetoothLinkService
   }
 
   /**
-   * Manage a Bluetooth link with a ConnectedThread
-   *
-   * @param socket The BluetoothSocket of the link
-   * @param device The BluetoothDevice representing the connected device
+   * Notify the UI activity that the connection was lost.
    */
-  // remove socketType here too?
-  public synchronized void connected(BluetoothSocket socket,
-                                     BluetoothDevice device,
-                                     final String socketType)
+  private void connectionLost()
   {
-    if (Debug) Log.i(TAG, "Connected.");
-    // Stub.
+    Message msg = mHandler.obtainMessage(Hub.MESSAGE_TOAST);
+    Bundle bundle = new Bundle();
+    bundle.putString(Hub.TOAST, "Connection lost.");
+    msg.setData(bundle);
+    mHandler.sendMessage(msg);
   }
 
   /**
-   * Stop all threads.
+   * Attempt to set up a link. The thread runs straight through; it either
+   * succeeds or fails.
    */
-  public synchronized void stop()
-  {
-  	if (Debug) Log.i(TAG, "Stop!");
-
-  	if (mConnectThread != null)
-    {
-      mConnectThread.cancel();
-      mConnectThread = null;
-    }
-    setState(STATE_NONE);
-  }
-
   private class ConnectThread extends Thread
   {
     private final BluetoothSocket mSocket;
     private final BluetoothDevice mDevice;
-    private String mSocketType; // Is this required? All sockets are secure.
 
     public ConnectThread(BluetoothDevice device)
     {
@@ -145,15 +191,14 @@ public class BluetoothLinkService
       }
       catch (IOException e)
       {
-        Log.e(TAG, "Failed to create " + mSocketType + " socket.\n", e);
+        Log.e(TAG, "Failed to create socket.\n", e);
       }
       mSocket = tmp;
     }
 
     public void run()
     {
-      if (Debug) Log.i(TAG, "BEGIN mConnectThread.\n" + 
-                            "SocketType: " + mSocketType);
+      if (Debug) Log.i(TAG, "BEGIN mConnectThread.\n");
 
       // Cancel device discovery to prevent it from slowing the connection.
       mAdapter.cancelDiscovery();
@@ -188,7 +233,7 @@ public class BluetoothLinkService
       }
 
       // Start the connected thread
-      connected(mSocket, mDevice, mSocketType);
+      connected(mSocket, mDevice);
     }
 
     public void cancel()
@@ -199,8 +244,107 @@ public class BluetoothLinkService
       }
       catch (IOException e)
       {
-        Log.e(TAG, "Failed to close " + mSocketType + " socket.\n", e);
+        Log.e(TAG, "Failed to close socket.\n", e);
       }
     }
   }
+
+/**
+ * Manage a link. All incoming data is parsed here. (Outgoing
+ * data would be sent from here too, if required.)
+ */
+private class ConnectedThread extends Thread
+{
+  private final BluetoothSocket mSocket;
+  private final InputStream mInStream;
+
+  public ConnectedThread(BluetoothSocket socket)
+  {
+    if (Debug) Log.i(TAG, "Create ConnectedThread.");
+    mSocket = socket;
+    InputStream tmpIn = null;
+
+    // Get the input stream
+    try
+    {
+      tmpIn = socket.getInputStream();
+    }
+    catch (IOException e)
+    {
+      Log.e(TAG, "Temporary input stream not created.\n" + e);
+    }
+
+    mInStream = tmpIn;
+  }
+
+  public void run()
+  {
+    if (Debug) Log.i(TAG, "BEGIN mConnectedThread.");
+
+    byte[] buffer = new byte[13];
+
+    // Keep listening to the input stream while connected.
+    while (true)
+    {
+      // Create a BufferedReader and read each array of bytes sent over the
+      // link into it using an InputStreamReader.
+      // The format of the data sent from the embedded system is 
+      // timestamp, no. samples per second, x, y, z, t1, t2
+      try
+      {
+        BufferedReader reader = new BufferedReader(
+          new InputStreamReader(mInStream));
+        String line;
+
+        while ((line = reader.readLine()) != null)
+        {
+          List<String> data = Arrays.asList(line.split(","));
+          if (data.size() == 7)
+          {
+            if (Debug) Log.i(TAG, "Received Data: " + line);
+
+            // Save data to DB.
+
+            mHandler.obtainMessage(Hub.MESSAGE_READ,
+                                   // 0, // what is this argument for? bytes?
+                                   // -1,
+                                   line
+                                   ).sendToTarget();
+          }
+        }
+        // Send line to UI here?
+      }
+      catch (IOException e)
+      {
+        Log.e(TAG, "Disconnected.\n", e);
+        connectionLost();
+        break;
+      }
+    }
+  }
+
+  public void cancel()
+  {
+    try
+    {
+      mSocket.close();
+    }
+    catch (IOException e)
+    {
+      Log.e(TAG, "Call to close socket failed.\n", e);
+    }
+  }
+}
+
+
+
+
+
+
+
+
+
+
+
+
 }
