@@ -60,7 +60,13 @@ public class BluetoothLinkService
    */
   private synchronized void setState(int state)
   {
+    if (Debug) Log.i(TAG, "Change state from " + mState + "to" + state);
     mState = state;
+
+    // Notify the UI activity of the state change
+    mHandler.obtainMessage(Hub.MESSAGE_STATE_CHANGE,
+                           state,
+                           -1).sendToTarget();
   }
 
   /** 
