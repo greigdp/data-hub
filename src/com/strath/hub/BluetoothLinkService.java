@@ -60,7 +60,7 @@ public class BluetoothLinkService
    */
   private synchronized void setState(int state)
   {
-    if (Debug) Log.i(TAG, "Change state from " + mState + "to" + state);
+    if (Debug) Log.i(TAG, "Change state from " + mState + " to " + state);
     mState = state;
 
     // Notify the UI activity of the state change
@@ -152,6 +152,13 @@ public class BluetoothLinkService
       mConnectThread.cancel();
       mConnectThread = null;
     }
+
+    if (mConnectedThread != null)
+    {
+      mConnectedThread.cancel();
+      mConnectedThread = null;
+    }
+    
     setState(STATE_NONE);
   }
 
