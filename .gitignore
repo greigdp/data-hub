@@ -15,5 +15,10 @@ gen/
 # local configuration file
 local.properties
 
+# LaTeX files
+*.aux
+*.log
+*.pdf
+
 # OS X junk
 .DS_Store
