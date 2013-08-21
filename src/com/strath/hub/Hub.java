@@ -139,8 +139,7 @@ public class Hub extends Activity
   }
 
   /**
-   * Initialise a {@codeBluetoothLinkService} object and call
-   * {@codeconnectDevice} to initiate a Bluetooth connection.
+   * Initialise a {@codeBluetoothLinkService} object
    *
    * @see #BluetoothLinkService(Activity, Handler)
    * @see #connectDevice()
@@ -152,66 +151,6 @@ public class Hub extends Activity
     // Initialise the BluetoothLinkService
     mLinkService = new BluetoothLinkService(this, mHandler);
   }
-
-  // Handler to receive information from the BluetoothLinkService
-  private final Handler mHandler = new Handler()
-  {
-    @Override
-    public void handleMessage(Message msg)
-    {
-    	switch (msg.what)
-    	{
-    		case MESSAGE_STATE_CHANGE:
-      		if(Debug) Log.i(TAG, "MESSAGE_STATE_CHANGE: " + msg.arg1);
-      		switch (msg.arg1)
-      		{
-      			case BluetoothLinkService.STATE_CONNECTED:
-      			  setStatus(getString(R.string.title_connected_to,
-      				                    mConnectedDeviceName));
-              break;
-            case BluetoothLinkService.STATE_CONNECTING:
-              setStatus(R.string.title_connecting);
-              break;
-            case BluetoothLinkService.STATE_NONE:
-              setStatus(R.string.title_not_connected);
-              break;
-      		}
-      		break;
-        case MESSAGE_READ:
-          String readMessage = (String) msg.obj;
-          if (Debug) Log.i(TAG, readMessage);
-          TextView display_bt_data = (TextView) findViewById(R.id.bt_data);
-          display_bt_data.setText(readMessage);
-          break;
-        case MESSAGE_DEVICE_NAME:
-          mConnectedDeviceName = msg.getData().getString(DEVICE_NAME);
-          if (Debug) Log.i(TAG, "Connected to " + mConnectedDeviceName);
-          Toast.makeText(Hub.this,
-          	             mConnectedDeviceName,
-          	             Toast.LENGTH_LONG).show();
-          break;
-        case MESSAGE_TOAST:
-          String toast = msg.getData().getString(TOAST);
-          Toast.makeText(Hub.this,
-          	             toast,
-          	             Toast.LENGTH_SHORT).show();
-          if (toast.equals(CONN_LOST) || toast.equals(CONN_FAIL))
-          {
-          	if (Debug) Log.i(TAG, toast);
-          	if (mLinkService != null)
-          	{
-          		connectDevice();
-          	}
-          	else
-          	{
-          		setupLink();
-          		connectDevice();
-          	}
-          }
-          break;
-    	}
-    }
-  };
 
   /**
    * Create a {@codeBluetoothDevice} object representing the slave device,
@@ -227,6 +166,67 @@ public class Hub extends Activity
     BluetoothDevice device = mBluetoothAdapter.getRemoteDevice(MAC_ADDRESS);
     mLinkService.connect(device);
   }
+
+  // Handler to receive information from the BluetoothLinkService
+  private final Handler mHandler = new Handler()
+  {
+    @Override
+    public void handleMessage(Message msg)
+    {
+      switch (msg.what)
+      {
+        case MESSAGE_STATE_CHANGE:
+          if(Debug) Log.i(TAG, "MESSAGE_STATE_CHANGE: " + msg.arg1);
+          switch (msg.arg1)
+          {
+            case BluetoothLinkService.STATE_CONNECTED:
+              setStatus(getString(R.string.title_connected_to,
+                                  mConnectedDeviceName));
+              break;
+            case BluetoothLinkService.STATE_CONNECTING:
+              setStatus(R.string.title_connecting);
+              break;
+            case BluetoothLinkService.STATE_NONE:
+              setStatus(R.string.title_not_connected);
+              break;
+          }
+          break;
+        case MESSAGE_READ:
+          String readMessage = (String) msg.obj;
+          if (Debug) Log.i(TAG, readMessage);
+          TextView display_bt_data = (TextView) findViewById(R.id.bt_data);
+          display_bt_data.setText(readMessage);
+          break;
+        case MESSAGE_DEVICE_NAME:
+          mConnectedDeviceName = msg.getData().getString(DEVICE_NAME);
+          if (Debug) Log.i(TAG, "Connected to " + mConnectedDeviceName);
+          Toast.makeText(Hub.this,
+                         mConnectedDeviceName,
+                         Toast.LENGTH_LONG).show();
+          break;
+        case MESSAGE_TOAST:
+          String toast = msg.getData().getString(TOAST);
+          Toast.makeText(Hub.this,
+                         toast,
+                         Toast.LENGTH_SHORT).show();
+          if (toast.equals(CONN_LOST) || toast.equals(CONN_FAIL))
+          {
+            if (Debug) Log.i(TAG, toast);
+            if (mLinkService != null)
+            {
+              connectDevice();
+            }
+            else
+            {
+              setupLink();
+              connectDevice();
+            }
+          }
+          break;
+      }
+    }
+  };
+
 
   private final void setStatus(int resId)
   {
