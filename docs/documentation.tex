@@ -23,10 +23,10 @@
 
 % Set Line spacing.
 \usepackage{setspace}
-\onehalfspacing
+\setstretch{1.1} % Spaces Alegreya nicely
 
 % Set paragraph indents to 1.5 em.
-\setlength{\parindent}{1.5em}
+\setlength{\parindent}{1em}
 
 % No space between paragraphs.
 \setlength{\parskip}{0ex}
@@ -53,7 +53,7 @@
 
 % Set code listings with the correct spacing
 \newcommand{\lstsinglespacing}{
-  \setstretch{1.1}
+  \setstretch{0.95} % Tighten up Menlo line spacing
 }
 \usepackage{listings}
 \lstset{basicstyle=\lstsinglespacing\footnotesize\ttfamily,
@@ -85,8 +85,8 @@
             labelsep=newline,
             singlelinecheck=false,
             justification=raggedright,
-            font={footnotesize, normalfont},
-            labelfont={footnotesize, normalfont}
+            font={normalsize, normalfont},
+            labelfont={normalsize, bf}
            ]{caption}
 
 % ************************************************************************* %
@@ -94,10 +94,71 @@
 \begin{document}
 \chapter{Data Hub: The Android App} % (fold)
 \label{cha:data_hub}
-[Fix;me: Intro to Android app.]
+[Fix;me: Intro to Android app. Main activity \texttt{Hub.java}. Class to set up and manage Bluetooth connections \texttt{BluetoothLinkService.java}.]
 \section{Receiving Bluetooth Data} % (fold)
 \label{sec:receiving_bluetooth_data}
+[Fix;me: add an overview of the section here and/or remove the following subsection heading.]
+\subsection{Initialising a Connection} % (fold)
+\label{sub:initialising_a_connection}
+Before initialising a connection some requirements must be satisfied in order that the app is able to receive data over the Bluetooth. The first is that the MAC address of the slave device sending the data must be known. To this end the MAC address is hard coded as the constant \texttt{MAC\_ADDRESS} in the main activity of the app. In the example shown in this documentation the MAC address of the test embedded system is 00:12:06:82:84 [Fix;me: update MAC address]. Future iterations of the design of the app should allow this parameter to be configurable. Details of how this might be achieved without risking losing connectivity, and therefore data, are given in Section~\ref{sec:configurable_bluetooth_mac_adress}.
 
+Secondly, before attempting to set up a Bluetooth connection, the app must establish that the device on which it is installed can support Bluetooth and that it has been enabled. Both of these tasks are performed in the \texttt{onCreate} lifecycle callback method as shown in Listing~\ref{lst:btsupportenablejava}. If Bluetooth is not supported the user is alerted using a toast message and the app stops running. If the local Bluetooth adapter is available it is enabled---if it is not already---by prompting the user to do so. The app is now ready to attempt to create a connection. 
+
+\begin{lstlisting}[language=Java,
+                   caption={Check Bluetooth is supported and enabled.},
+                   label=lst:btsupportenablejava,
+                   numbers=none]
+@Override
+public void onCreate(Bundle savedInstanceState)
+{
+  // ...
+
+  // Get the local Bluetooth adapter and check that Bluetooth is
+  // supported.
+  mBluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
+  if (mBluetoothAdapter == null)
+  {
+    Toast.makeText(this,
+                   "Bluetooth is not supported",
+                   Toast.LENGTH_LONG).show();
+    finish();
+    return;
+  }
+  else
+  {
+    // If Bluetooth is not on, request that it be enabled.
+    // setupLink() will then be called during onActivityResult.
+    if (!mBluetoothAdapter.isEnabled())
+    {
+      Intent enableIntent = new Intent(BluetoothAdapter.
+                                       ACTION_REQUEST_ENABLE);
+    }
+    // Bluetooth is on so set up the link session.
+    else
+    {
+      if (mLinkService == null) setupLink();
+      connectDevice();
+    }
+  }
+}
+\end{lstlisting}
+The main activity of the app uses two methods to initiate a connection: \texttt{setupLink()} and \texttt{connectDevice()}. Each performs a simple function. A new instance of \texttt{BluetoothLinkService} is created when \texttt{setupLink()} is called. Then, when \texttt{connectDevice()} is called, a \texttt{BluetoothDevice} object representing the slave device is instantiated using \texttt{MAC\_ADDRESS} which is passed as an argument in a call of the \texttt{connect()} method to the \texttt{BluetoothLinkService} instance created in \texttt{setupLink()}. Both methods are shown in Listing~\ref{lst:setupconnectjava}.
+\begin{lstlisting}[language=Java,
+                   caption={The \texttt{setupLink()} and \texttt{connectDevice()} methods.},
+                   label=lst:setupconnectjava,
+                   numbers=none]
+pivate void setupLink()
+{ 
+  mLinkService = new BluetoothLinkService(this, mHandler);
+}
+
+private void connectDevice()
+{
+  BluetoothDevice device = mBluetoothAdapter.getRemoteDevice(MAC_ADDRESS);
+  mLinkService.connect(device);
+}
+\end{lstlisting}
+% subsection initiiate_a_connection (end)
 % section receiving_bluetooth_data (end)
 \section{Gathering Location Data} % (fold)
 \label{sec:gathering_location_data}
@@ -105,7 +166,7 @@
 % section gathering_location_data (end)
 \section{The User Interface} % (fold)
 \label{sec:the_user_interface}
-
+[Fix;me: document the \texttt{Handler} in \texttt{Hub.java}.]
 % section the_user_interface (end)
 \section{Storing Data Locally} % (fold)
 \label{sec:storing_data_locally}
@@ -120,26 +181,34 @@
 \label{cha:testing}
 \section{Accelerometer Data} % (fold)
 \label{sec:accelerometer_data}
-
+[Fix;Me: basic ``12 point'' test. Discuss calibration in Section~\ref{sec:calibration}.]
 % section accelerometer_data (end)
 \section{Receiving Data} % (fold)
-\label{sec:test_1_receiving_data}
+\label{sec:receiving_data}
 
-% section test_1_receiving_data (end)
+% section receiving_data (end)
 \section{Storing Data Locally} % (fold)
-\label{sec:test_2_storing_data_locally}
+\label{sec:test_data_locally}
 
-% section test_2_storing_data_locally (end)
+% section storing_data_locally (end)
 \section{Storing Data Remotely} % (fold)
-\label{sec:test_3_storing_data_remotely}
+\label{sec:test_data_remotely}
 
-% section test_3_storing_data_remotely (end)
+% section storing_data_remotely (end)
 % chapter testing (end)
 \chapter{Further Work} % (fold)
 \label{cha:further_work}
+\section{Configurable Bluetooth MAC Address} % (fold)
+\label{sec:configurable_bluetooth_mac_adress}
+[Fix;Me: Clinicians should be able to pair an app/patient with a specific embedded system. More complex than a added a menu because we don't want patients to be able to alter the settings.]
+% section configurable_bluetooth_mac_adress (end)
 \section{Calibration} % (fold)
 \label{sec:calibration}
-
+[Fix;me: there are two problems which must be solved:
+\begin{enumerate}
+\item establishing the differences between the reference frame of the accelerometer, the embedded system, and the prosthesis for any given measurement, (All three could move.), and
+\item recalibrating the accelerometer to account for drift, possibly with a ``quasi-static movements detector''.
+\end{enumerate}]
 % section calibration (end)
 % chapter further_work (end)
 \chapter{Code Listings} % (fold)
@@ -150,30 +219,30 @@
 [Fix;me: Overview of Android app code.]
 \lstinputlisting[language=XML,
                  caption=\ttfamily{AndroidManifest.xml},
-                 label=lab:AndroidManifestxml,
+                 label=lst:AndroidManifestxml,
                 ]{../AndroidManifest.xml}
 \newpage
 \lstinputlisting[language=Java,
                  caption=\ttfamily{Hub.java},
-                 label=lab:Hubjava
+                 label=lst:Hubjava
                 ]{../src/com/strath/hub/Hub.java}
 \newpage
 \lstinputlisting[language=Java,
                  caption=\ttfamily{BluetoothLinkService.java},
-                 label=lab:BluetoothLinkServicejava,
+                 label=lst:BluetoothLinkServicejava,
                 ]{../src/com/strath/hub/BluetoothLinkService.java}
 \newpage
 \lstinputlisting[language=XML,
                  caption=\ttfamily{main.xml},
-                 label=lab:mainxml,
+                 label=lst:mainxml,
                 ]{../res/layout/main.xml}
 \lstinputlisting[language=XML,
                  caption=\ttfamily{styles.xml},
-                 label=lab:stylesxml,
+                 label=lst:stylesxml,
                 ]{../res/values/styles.xml}
 \lstinputlisting[language=XML,
                  caption=\ttfamily{strings.xml},
-                 label=lab:stringsxml,
+                 label=lst:stringsxml,
                 ]{../res/values/strings.xml}
 % section android_app (end)
 % chapter code_listings (end)
