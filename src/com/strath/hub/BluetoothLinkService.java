@@ -18,16 +18,15 @@ import android.os.Message;
 import android.util.Log;
 
 /**
- * Set up and manage Bluetooth connections. Use separate threads to listen
- * for incoming connections, connect to devices, and to transmit and
- * receive data.
+ * Set up and manage Bluetooth connections. Use separate threads to connect
+ * to devices, and, when connected, to receive data.
  */
 public class BluetoothLinkService
 {
 	private static final String TAG = "BluetoothLinkService";
 	private static final boolean Debug = true;
 
-  /** Default RFCOMM/SPP UUID */
+  /** Default secure SPP UUID */
   private static final UUID SECURE_UUID = 
     UUID.fromString("00001101-0000-1000-8000-00805F9B34FB");
 
@@ -47,9 +46,9 @@ public class BluetoothLinkService
 	public BluetoothLinkService(Context context, Handler handler)
 	{
     mContext = context;
+    mHandler = handler;
     mAdapter = BluetoothAdapter.getDefaultAdapter();
     mState = STATE_NONE;
-    mHandler = handler;
 	}
 
   /** 
@@ -99,7 +98,6 @@ public class BluetoothLinkService
     mConnectThread.start();
     setState(STATE_CONNECTING);   
   }
-
 
   /**
    * Manage a Bluetooth link with a ConnectedThread
@@ -288,13 +286,11 @@ public class BluetoothLinkService
       }  
 
       mInStream = tmpIn;
-    }  
+    }
 
     public void run()
     {
-      if (Debug) Log.i(TAG, "BEGIN mConnectedThread.");  
-
-      byte[] buffer = new byte[13];  
+      if (Debug) Log.i(TAG, "BEGIN mConnectedThread.");
 
       // Keep listening to the input stream while connected.
       while (true)
