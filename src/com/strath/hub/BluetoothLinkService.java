@@ -43,7 +43,12 @@ public class BluetoothLinkService
   public static final int STATE_CONNECTING = 2;
   public static final int STATE_CONNECTED = 3;
 
-  /** ... */
+  /** 
+   * BluetoothLinkService Constructor.
+   * @param context The current context of the main activity
+   * @param handler A handler to send messages to the main activity
+   * @see Hub
+   */
 	public BluetoothLinkService(Context context, Handler handler)
 	{
     mContext = context;
