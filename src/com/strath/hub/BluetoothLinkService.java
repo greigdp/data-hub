@@ -43,6 +43,7 @@ public class BluetoothLinkService
   public static final int STATE_CONNECTING = 2;
   public static final int STATE_CONNECTED = 3;
 
+  /** ... */
 	public BluetoothLinkService(Context context, Handler handler)
 	{
     mContext = context;
@@ -312,10 +313,23 @@ public class BluetoothLinkService
             {
               if (Debug) Log.i(TAG, "Received Data: " + line);  
 
-              // Save data to DB.
+              String timestamp = data.get(0);
+              // Ignore the second element of data for now
+              int xaxis = Integer.parseInt(data.get(2));
+              int yaxis = Integer.parseInt(data.get(3));
+              int zaxis = Integer.parseInt(data.get(4));
+
+              // temperature data...
+
+              AccelerometerWrapper accWrap = 
+                new AccelerometerWrapper(timestamp, xaxis, yaxis, zaxis);
+
+              HubDB db = new HubDB(mContext);
+              db.addAccSample(accWrap);
             }
-          if (Debug) Log.i(TAG, "Send " + line + " to the UI activity.");
-          mHandler.obtainMessage(Hub.MESSAGE_READ, line).sendToTarget();
+
+            if (Debug) Log.i(TAG, "Send " + line + " to the UI activity.");
+            mHandler.obtainMessage(Hub.MESSAGE_READ, line).sendToTarget();
           }
         }
         catch (IOException e)
