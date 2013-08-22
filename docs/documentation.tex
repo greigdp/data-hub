@@ -159,14 +159,166 @@ private void connectDevice()
 }
 \end{lstlisting}
 % subsection initiiate_a_connection (end)
+\subsection{The \texttt{BluetoothLinkService} Class} % (fold)
+\label{sub:bls}
+A \texttt{BluetoothLinkService} is created by passing an application context and handler to the constructor shown in Listing~\ref{lst:blsconstructorjava}.
+\begin{lstlisting}[language=Java,
+                   caption={The \texttt{BluetoothLinkService} constructor.},
+                   label=lst:blsconstructorjava,
+                   numbers=none]
+public BluetoothLinkService(Context context, Handler handler)
+{
+  mContext = context;
+  mHandler = handler;
+  mAdapter = BluetoothAdapter.getDefaultAdapter();
+  // ...
+}
+\end{lstlisting}
+When the constructor is called in \texttt{Hub.java} (see \texttt{setupLink()} in Listing~\ref{lst:setupconnectjava}) the \texttt{this} keyword is used to pass the pass the context of the main activity, and a new handler is created to receive messages sent from the threads used by the \texttt{BluetoothLinkService}. A \texttt{BluetoothAdapter} is also instantiated to represent the default adapter of the device.
+
+\texttt{mHandler} is primarily used to update the user interface on changes in status of the Bluetooth connection and is discussed in detail in Sub-section~\ref{sec:the_user_interface}. The remainder of this Sub-section details the operation of \texttt{BluetoothLinkService} class.
+
+The \texttt{BluetoothLinkService} class sets up and manages Bluetooth connections. It uses two separate threads to connect to devices, and when connected, to receive data. These threads are controlled by three methods:
+\begin{enumerate}
+\item \texttt{connect()} to initiate a connection to a remote (slave) device,
+\item \texttt{connected()} to manage a \texttt{BluetoothLinkService} which is running a \texttt{ConnectedThread}, and
+\item \texttt{stop()} to stop all threads running as part of a \texttt{BluetoothLinkService}.
+\end{enumerate}
+The \texttt{connect()} method closes any open connections, including those currently connecting, and then creates a new \texttt{ConnectThread} to establish a connection. When called \texttt{ConnectThread} instantiates a local \texttt{BluetoothSocket} using the default secure serial port protocol UUID, and a \texttt{BluetoothDevice} using the parameter passed to the \texttt{connect()} method. If this is successful the thread runs.
+
+Before trying to connect, any service discovery which is running on the adapter is cancelled to prevent it from slowing the connection. The \texttt{connect()} method is then called on the socket. If a connection is established successfully, the thread is reset and the \texttt{connected()} method is called. The connection is now established. The \texttt{connect()} method and \texttt{ConnectThread} are shown in Listing~\ref{lst:connectthreadjava}.
+\begin{lstlisting}[language=Java,
+                   caption={The \texttt{connect()} method and \texttt{ConnectThread}.},
+                   label=lst:connectthreadjava,
+                   numbers=none]
+public synchronized void connect(BluetoothDevice device)
+{
+  // ...
+  mConnectThread = new ConnectThread(device);
+  mConnectThread.start();
+  // ...  
+}
+
+private class ConnectThread extends Thread
+  {
+    private final BluetoothSocket mSocket;
+    private final BluetoothDevice mDevice;
+
+    public ConnectThread(BluetoothDevice device)
+    {
+      mDevice = device;
+      BluetoothSocket tmp = null;
+
+      try
+      {
+        tmp = device.createRfcommSocketToServiceRecord(SECURE_UUID);
+      }
+      catch (IOException e)
+      {
+        Log.e(TAG, "Failed to create socket.\n", e);
+      }
+      mSocket = tmp;
+    }
+
+    public void run()
+    {
+      mAdapter.cancelDiscovery();
+
+      try
+      {
+        if (Debug) Log.i(TAG, "Trying to connect.");
+        mSocket.connect();
+      }
+      catch (IOException e)
+      {
+        // ...
+      }
+
+      synchronized (BluetoothLinkService.this)
+      {
+        mConnectThread = null;
+      }
+
+      connected(mSocket, mDevice);
+    }
+
+    // cancel()
+  }
+\end{lstlisting}
+The \texttt{connected()} method creates a new \texttt{ConnectedThread} and starts it. The \texttt{ConnectedThread} creates a local \texttt{BluetoothSocket} from the instance passed as an argument also creates a local \texttt{InputStream}. If an \texttt{InputStream} is available form the socket the thread runs.
+
+\texttt{ConnectedThread} continually listens to the \texttt{InputStream} while connected. A \texttt{BufferedReader} is created and each array of bytes sent over the Bluetooth connection is read into it using an \texttt{InputStreamReader}. Any data in the \texttt{BufferedReader} it is parsed, sent to the user interface for display and stored locally on the device. The \texttt{connected()} method and \texttt{ConnectedThread} are shown inListing~\ref{lst:connectedthreadjava}.
+\begin{lstlisting}[language=Java,
+                   caption={The \texttt{connected()} method and \texttt{ConnectedThread}},
+                   label=lst:connectedthreadjava,
+                   numbers=none]
+  public synchronized void connected(BluetoothSocket socket,
+                                     BluetoothDevice device)
+  {
+    // Cancel any threads already running here.
+
+    mConnectedThread = new ConnectedThread(socket);
+    mConnectedThread.start();
+
+    // ...
+  }
+
+  private class ConnectedThread extends Thread
+  {
+    private final BluetoothSocket mSocket;
+    private final InputStream mInStream;  
+
+    public ConnectedThread(BluetoothSocket socket)
+    {
+      mSocket = socket;
+      InputStream tmpIn = null;  
+
+      try
+      {
+        tmpIn = socket.getInputStream();
+      }
+      catch (IOException e)
+      {
+        // ...
+      }  
+
+      mInStream = tmpIn;
+    }
+
+    public void run()
+    {
+      while (true)
+      {
+        try
+        {
+          BufferedReader reader = new BufferedReader(
+            new InputStreamReader(mInStream));
+          String line;  
+
+          while ((line = reader.readLine()) != null)
+          {
+            // Save data to DB and send to UI.
+          }
+        }
+        catch (IOException e)
+        {
+          // ...
+        }
+      }
+    }
+
+    // cancel()
+  }
+\end{lstlisting}
+% subsection bluetoothlinkservice (end)
 % section receiving_bluetooth_data (end)
 \section{Gathering Location Data} % (fold)
 \label{sec:gathering_location_data}
-
+[Fix;Me: fold in location gathering code and test.]
 % section gathering_location_data (end)
 \section{The User Interface} % (fold)
 \label{sec:the_user_interface}
-[Fix;me: document the \texttt{Handler} in \texttt{Hub.java}.]
+[Fix;Me: document the \texttt{Handler} in \texttt{Hub.java}.]
 % section the_user_interface (end)
 \section{Storing Data Locally} % (fold)
 \label{sec:storing_data_locally}
