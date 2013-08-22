@@ -303,7 +303,7 @@ public class BluetoothLinkService
         {
           BufferedReader reader = new BufferedReader(
             new InputStreamReader(mInStream));
-          String line;  
+          String line;
 
           while ((line = reader.readLine()) != null)
           {
