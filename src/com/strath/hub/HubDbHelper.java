@@ -2,7 +2,11 @@ package com.strath.hub;
 
 import java.io.File;
 
+import android.content.ContentValues;
 import android.content.Context;
+import android.database.Cursor;
+import android.database.SQLException;
+import android.database.sqlite.SQLiteDatabase;
 import android.os.Environment;
 import android.util.Log;
 
@@ -21,6 +25,7 @@ public class HubDbHelper
   private final static String BASE_DIR = "hub";
 
   private HubDbOpenHelper dbHelper;
+  private int uid = 1; // [Fix;me: this hack adds a user id to the data.]
 
   /**
    * HubDB constructor
@@ -69,8 +74,31 @@ public class HubDbHelper
    */
 	public synchronized void addAccSample(AccelerometerWrapper accWrap)
 	{
-		if (Debug) Log.i(TAG, "Add a record to the accelerometer table");
+		if (Debug) Log.i(TAG, "Adding a record to the accelerometer table");
 
-		// Stub.
+		SQLiteDatabase db = null;
+    try
+    {
+      db = dbHelper.getWritableDatabase();
+      ContentValues values = new ContentValues();
+      values.put(HubDbOpenHelper.UID, uid);
+      values.put(HubDbOpenHelper.TIMESTAMP, accWrap.getTimestamp());
+      values.put(HubDbOpenHelper.X_AXIS, accWrap.getX());
+      values.put(HubDbOpenHelper.Y_AXIS, accWrap.getY());
+      values.put(HubDbOpenHelper.Z_AXIS, accWrap.getZ());
+      db.insertOrThrow(HubDbOpenHelper.ACC_TABLE_NAME,
+                       HubDbOpenHelper.TIMESTAMP,
+                       values);
+      if (Debug) Log.i(TAG, "Record added.");
+    }
+    catch(SQLException e)
+    {
+      Log.e(TAG, "Could not insert record:\n" + e);
+    }
+    finally
+    {
+      if (Debug) Log.i(TAG, "Closing database.");
+      if (db != null) db.close();
+    }
 	}
 }
