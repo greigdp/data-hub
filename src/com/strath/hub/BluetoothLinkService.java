@@ -4,6 +4,7 @@ import java.io.BufferedReader;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.IOException;
+import java.lang.Integer;
 import java.util.Arrays;
 import java.util.List;
 import java.util.UUID;
@@ -326,10 +327,9 @@ public class BluetoothLinkService
 
               // temperature data...
 
+              HubDbHelper db = new HubDbHelper(mContext);
               AccelerometerWrapper accWrap = 
                 new AccelerometerWrapper(timestamp, xaxis, yaxis, zaxis);
-
-              HubDB db = new HubDB(mContext);
               db.addAccSample(accWrap);
             }
 
