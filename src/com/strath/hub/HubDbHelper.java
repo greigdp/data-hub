@@ -1,6 +1,9 @@
 package com.strath.hub;
 
 import java.io.File;
+import java.io.PrintWriter;
+import java.io.StringWriter;
+import java.io.Writer;
 
 import android.content.ContentValues;
 import android.content.Context;
@@ -18,11 +21,11 @@ import android.util.Log;
  */
 public class HubDbHelper
 {
-	public final static String TAG = "HubDB";
+	public final static String TAG = "HubDbHelper";
 	private static final boolean Debug = true;
 
   private final static String DB_NAME = "hub_db.sqlite3";
-  private final static String BASE_DIR = "hub";
+  private final static String BASE_DIR = "Hub";
 
   private HubDbOpenHelper dbHelper;
   private int uid = 1; // [Fix;me: this hack adds a user id to the data.]
@@ -50,7 +53,7 @@ public class HubDbHelper
   	if (Debug) Log.i(TAG, "getDBPath() called.");
 
   	String path = Environment.getExternalStorageDirectory()
-  	                         .getPath() + BASE_DIR;
+  	                         .getPath() + "/" + BASE_DIR;
 
     File dbDir = new File(path);
     if (!dbDir.isDirectory())
@@ -62,7 +65,10 @@ public class HubDbHelper
     	}
     	catch (Exception e)
     	{
-    		Log.e(TAG, "Error creating path:\n" + e);
+    		final Writer result = new StringWriter();
+        final PrintWriter printWriter = new PrintWriter(result);
+        e.printStackTrace(printWriter);
+        Log.e(TAG, result.toString());
     	}
     }
     return path;
