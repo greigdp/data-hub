@@ -5,12 +5,17 @@ import android.content.Context;
 import android.content.Intent;
 import android.util.Log;
 
+import com.strath.hub.SyncService;
+
 /**
- * Start {@link SyncService}...
+ * Listen for a pending intent triggered by an {@link 
+ * android.app.AlarmManager} in {@link DataGatheringService} and start 
+ * {@link syncService}.
  *
  * @author jbanford
  *
- * ...
+ * @see com.strath.hub.DataGatheringService
+ * @see com.strath.hub.SyncService
  */
 public class SyncAlarmReceiver extends BroadcastReceiver
 {
@@ -22,6 +27,7 @@ public class SyncAlarmReceiver extends BroadcastReceiver
   {
   	if (Debug) Log.i(TAG, "onReceive called.");
 
-  	// Stub.
+  	Intent syncIntent = new Intent(context, SyncService.class);
+  	context.startService(syncIntent);
   }
 }
