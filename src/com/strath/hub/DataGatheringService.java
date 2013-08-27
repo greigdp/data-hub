@@ -95,6 +95,8 @@ public class DataGatheringService extends Service
   {
   	if (Debug) Log.i(TAG, "stopSync called.");
 
-  	// Stub.
+  	if (mSyncPendingIntent != null)
+      mAlarmManager.cancel(mSyncPendingIntent);
+    mIsSynching = false;
   }
 }
