@@ -1,10 +1,12 @@
 package com.strath.hub;
 
 import android.app.AlarmManager;
+import android.app.PendingIntent;
 import android.app.Service;
 import android.content.Context;
 import android.content.Intent;
 import android.os.IBinder;
+import android.os.SystemClock;
 import android.util.Log;
 
 /**
@@ -24,6 +26,9 @@ public class DataGatheringService extends Service
 	  AlarmManager.INTERVAL_FIFTEEN_MINUTES / 15; // Once a minute for testing.
 
 	private AlarmManager mAlarmManager;
+	private Intent mSyncIntent;
+	private PendingIntent mSyncPendingIntent;
+	private boolean mIsSynching;
 
   @Override
   public void onCreate()
@@ -72,7 +77,15 @@ public class DataGatheringService extends Service
   {
   	if (Debug) Log.i(TAG, "startSync called. SYNC_PERIOD IS " + SYNC_PERIOD);
 
-  	// Stub.
+  	mSyncIntent = 
+  	  new Intent(getApplicationContext(), SyncAlarmReceiver.class);
+  	mSyncPendingIntent = 
+  	  PendingIntent.getBroadcast(getApplicationContext(), 0, mSyncIntent, 0);
+    mAlarmManager.setInexactRepeating(AlarmManager.ELAPSED_REALTIME_WAKEUP,
+    	                                SystemClock.elapsedRealtime(),
+    	                                SYNC_PERIOD,
+    	                                mSyncPendingIntent);
+    mIsSynching = true;
   }
 
   /**
@@ -85,21 +98,3 @@ public class DataGatheringService extends Service
   	// Stub.
   }
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
