@@ -64,6 +64,8 @@ public class Hub extends Activity
     }
     else
     {
+      startGatheringData();
+
     	// If Bluetooth is not on, request that it be enabled.
     	// setupLink() will then be called during onActivityResult.
     	if (!mBluetoothAdapter.isEnabled())
@@ -109,6 +111,8 @@ public class Hub extends Activity
 
   	// Stop BluetoothLinkService
   	if (mLinkService != null) mLinkService.stop();
+
+    stopGatheringData();
   }
 
   public void onActivityResult(int requestCode, int resultCode, Intent data)
@@ -136,6 +140,30 @@ public class Hub extends Activity
           finish();
         }
     }
+  }
+
+  /**
+   * Start the data gathering service.
+   *
+   * @see DataGatheringService
+   */
+  private void startGatheringData()
+  {
+    if (Debug) Log.i(TAG, "startGatheringData called.");
+
+    Intent intent = new Intent(this, DataGatheringService.class);
+    startService(intent);
+  }
+
+  /**
+   * Stop the data gathering service.
+   */
+  private void stopGatheringData()
+  {
+    if (Debug) Log.i(TAG, "stopGatheringData called.");
+
+    Intent intent = new Intent(this, DataGatheringService.class);
+    stopService(intent);
   }
 
   /**
