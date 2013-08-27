@@ -1,5 +1,7 @@
 package com.strath.hub;
 
+import org.json.JSONArray;
+
 import java.io.File;
 import java.io.PrintWriter;
 import java.io.StringWriter;
@@ -107,4 +109,22 @@ public class HubDbHelper
       if (db != null) db.close();
     }
 	}
+
+  /**
+   * Return a JSONArray of all row in the accelerometer table with an id
+   * greater than {@code latestId}
+   *
+   * @param latestId
+   * @return JSONArray of accelerometer samples
+   */
+  public JSONArray getLatestMovement(int latestId)
+  {
+    if (Debug) Log.i(TAG, "getLatestMovement called.");
+
+    JSONArray movements = new JSONArray();
+
+    // Stub.
+
+    return movements;
+  }
 }

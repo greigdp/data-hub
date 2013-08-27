@@ -5,8 +5,6 @@ import android.content.Context;
 import android.content.Intent;
 import android.util.Log;
 
-import com.strath.hub.SyncService;
-
 /**
  * Listen for a pending intent triggered by an {@link 
  * android.app.AlarmManager} in {@link DataGatheringService} and start 
