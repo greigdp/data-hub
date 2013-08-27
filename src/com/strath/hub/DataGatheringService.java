@@ -1,6 +1,8 @@
 package com.strath.hub;
 
+import android.app.AlarmManager;
 import android.app.Service;
+import android.content.Context;
 import android.content.Intent;
 import android.os.IBinder;
 import android.util.Log;
@@ -17,6 +19,11 @@ public class DataGatheringService extends Service
 {
 	public static final String TAG = "DataGatheringService";
 	private static final boolean Debug = true;
+
+	private final static long SYNC_PERIOD = 
+	  AlarmManager.INTERVAL_FIFTEEN_MINUTES / 15; // Once a minute for testing.
+
+	private AlarmManager mAlarmManager;
 
   @Override
   public void onCreate()
@@ -42,8 +49,57 @@ public class DataGatheringService extends Service
 
   	super.onStartCommand(intent, flags, startId);
 
-    // Stub.
+    mAlarmManager = (AlarmManager) getSystemService(Context.ALARM_SERVICE);
+    startSync();
 
   	return 0;
   }
+
+  @Override
+  public void onDestroy()
+  {
+  	if (Debug) Log.i(TAG, "onDestroy called.");
+
+  	super.onDestroy();
+
+  	stopSync();
+  }
+
+  /**
+   * Start the synchronisation service.
+   */
+  private void startSync()
+  {
+  	if (Debug) Log.i(TAG, "startSync called. SYNC_PERIOD IS " + SYNC_PERIOD);
+
+  	// Stub.
+  }
+
+  /**
+   * Stop the synchronisation service
+   */
+  private void stopSync()
+  {
+  	if (Debug) Log.i(TAG, "stopSync called.");
+
+  	// Stub.
+  }
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
