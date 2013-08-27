@@ -6,8 +6,7 @@ import android.database.sqlite.SQLiteOpenHelper;
 import android.util.Log;
 
 /**
- * Helper class for opening and creating hub_db.sqlite3, to be used in
- * conjuction with {@link HubDbHelper}.
+ * Helper class for opening and creating {@code hub_db.sqlite3}, to be used * in conjuction with {@link HubDbHelper}.
  *
  * @see HubDbHelper
  */

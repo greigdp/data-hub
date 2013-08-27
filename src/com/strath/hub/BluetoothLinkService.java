@@ -76,7 +76,7 @@ public class BluetoothLinkService
   }
 
   /** 
-   * Start {@codeConnectThread} to initiate a connection to a remote device.
+   * Start {@code ConnectThread} to initiate a connection to a remote device.
    *
    * @param device The BluetoothDevice representing the slave. 
    */

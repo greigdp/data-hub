@@ -22,7 +22,7 @@ public class AccelerometerWrapper
    * @param t Sample timestamp
    * @param x Sample x value
    * @param y Sample y value
-   * @param z Smaple z value
+   * @param z Sample z value
    */
 	public AccelerometerWrapper(String t, int x, int y, int z)
   {

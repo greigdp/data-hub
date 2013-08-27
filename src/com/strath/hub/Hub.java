@@ -139,7 +139,7 @@ public class Hub extends Activity
   }
 
   /**
-   * Initialise a {@codeBluetoothLinkService} object
+   * Initialise a {@code BluetoothLinkService} object
    *
    * @see #BluetoothLinkService(Activity, Handler)
    * @see #connectDevice()
@@ -153,7 +153,7 @@ public class Hub extends Activity
   }
 
   /**
-   * Create a {@codeBluetoothDevice} object representing the slave device,
+   * Create a {@code BluetoothDevice} object representing the slave device,
    * and connect to the device.
    * 
    * @see BluetoothDevice
