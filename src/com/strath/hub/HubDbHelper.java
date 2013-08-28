@@ -1,6 +1,7 @@
 package com.strath.hub;
 
 import org.json.JSONArray;
+import org.json.JSONObject;
 
 import java.io.File;
 import java.io.PrintWriter;
@@ -121,10 +122,55 @@ public class HubDbHelper
   {
     if (Debug) Log.i(TAG, "getLatestMovement called.");
 
-    JSONArray movements = new JSONArray();
+    JSONArray acc_data = new JSONArray();
+    SQLiteDatabase db = null;
 
-    // Stub.
+    try
+    {
+      db = dbHelper.getReadableDatabase();
+      Cursor c = db.query(HubDbOpenHelper.ACC_TABLE_NAME,
+                          null,
+                          HubDbOpenHelper.ID + " > " + latestId,
+                          null,
+                          null,
+                          null,
+                          HubDbOpenHelper.ID + " ASC");
 
-    return movements;
+      while (c.moveToNext())
+      {
+        int id = c.getInt(0);
+        int uid = c.getInt(1);
+        String t = c.getString(2);
+        int x = c.getInt(3);
+        int y = c.getInt(4);
+        int z = c.getInt(5);
+        JSONObject data = new JSONObject();
+
+        try
+        {
+          data.put(HubDbOpenHelper.ID, id);
+          data.put(HubDbOpenHelper.UID, uid);
+          data.put(HubDbOpenHelper.TIMESTAMP, t);
+          data.put(HubDbOpenHelper.X_AXIS, x);
+          data.put(HubDbOpenHelper.Y_AXIS, y);
+          data.put(HubDbOpenHelper.Z_AXIS, z);
+
+          JSONObject acc = new JSONObject(); // Refactor server code.
+          acc.put("movement", data); // Tagging each JSONArray not required.
+
+          acc_data.put(acc);
+        }
+        catch (org.json.JSONException e)
+        {
+          Log.e(TAG, "Exception occured.\n" + e.getMessage());
+        }
+      }
+
+      return acc_data;
+    }
+    finally
+    {
+      if (db != null) db.close();
+    }
   }
 }

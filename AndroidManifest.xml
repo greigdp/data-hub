@@ -8,6 +8,8 @@
   <uses-permission android:name="android.permission.BLUETOOTH"/>
   <uses-permission android:name="android.permission.BLUETOOTH_ADMIN"/>
   <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE"/>
+  <uses-permission android:name="android.permission.WAKE_LOCK"/>
+  <uses-permission android:name="android.permission.INTERNET"/>
   <application android:label="@string/app_name"
                android:icon="@drawable/ic_launcher">
     <activity android:name="Hub"
@@ -17,7 +19,11 @@
         <category android:name="android.intent.category.LAUNCHER" />
       </intent-filter>
     </activity>
-    <service android:name="com.strath.BluetoothLinkService">
+    <service android:name="com.strath.hub.BluetoothLinkService">
     </service>
+    <service android:name="com.strath.hub.DataGatheringService">
+    </service>
+    <service android:name="com.strath.hub.SyncService" />
+    <receiver android:name="com.strath.hub.SyncAlarmReceiver" />
   </application>
 </manifest>

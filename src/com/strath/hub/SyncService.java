@@ -3,10 +3,17 @@ package com.strath.hub;
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpResponse;
 import org.apache.http.HttpStatus;
-import org.apache.http.client.methods.HttpGet;
+import org.apache.http.StatusLine;
+import org.apache.http.client.HttpClient;
+import org.apache.http.entity.StringEntity;
+import org.apache.http.message.BasicHeader;
 import org.apache.http.params.BasicHttpParams;
 import org.apache.http.params.HttpConnectionParams;
+import org.apache.http.params.HttpParams;
+import org.apache.http.protocol.HTTP;
 import org.apache.http.util.EntityUtils;
+import org.apache.http.client.methods.HttpGet;
+import org.apache.http.client.methods.HttpPost;
 import org.apache.http.impl.client.DefaultHttpClient;
 
 import android.app.Service;
@@ -14,6 +21,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.os.IBinder;
 import android.os.PowerManager;
+import android.util.Base64;
 import android.util.Log;
 
 /**
@@ -88,15 +96,59 @@ public class SyncService extends Service
    * Send new data to the server.
    *
    * @param url The URL of the server.
-   * @param json The data to be sent.
+   * @param data The data to be sent.
    */
-  private int updateServer(String url, String json)
+  private int updateServer(String url, String data)
   {
   	if (Debug) Log.i(TAG, "updateServer called.");
 
-  	// Stub.
+  	HttpParams mParams = new BasicHttpParams();
+    HttpConnectionParams.setConnectionTimeout(mParams, CONNECTION_TIMEOUT);
+    HttpConnectionParams.setSoTimeout(mParams, CONNECTION_TIMEOUT);
+    HttpClient httpClient = new DefaultHttpClient(mParams);
 
-  	return 0;
+    try
+    {
+      HttpPost httpPost = new HttpPost(url);
+      httpPost.setHeader("Content-type", "application/json");
+      httpPost.setHeader("Authorization", "Basic " + 
+                         Base64.encodeToString("admin:admin".getBytes(),
+                         Base64.NO_WRAP)); // Oh God. WAT?!
+
+      StringEntity stringEntity = new StringEntity(data);
+      stringEntity.setContentEncoding(new BasicHeader(HTTP.CONTENT_TYPE,
+                                      "application/json"));
+      httpPost.setEntity(stringEntity);
+
+      HttpResponse response = httpClient.execute(httpPost);
+      HttpEntity entity = response.getEntity();
+      StatusLine status = response.getStatusLine();
+      int statusCode = status.getStatusCode();
+
+      if (statusCode == HttpStatus.SC_OK)
+      {
+        if (Debug) Log.i(TAG, "Status code is " + statusCode + ". Syncing.");
+
+        return 0;
+      }
+      else
+      {
+        if (Debug)
+          Log.i(TAG, "Status code is " + statusCode + ". Did not sync.");
+
+        mHasError = true;
+
+        return -1;
+      }
+    }
+    catch (Exception e)
+    {
+      Log.e(TAG, "Exception occured. \n" + e.getMessage());
+
+      mHasError = true;
+
+      return -1;
+    }
   }
 
   /**
