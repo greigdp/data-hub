@@ -155,7 +155,7 @@ public class HubDbHelper
           data.put(HubDbOpenHelper.Y_AXIS, y);
           data.put(HubDbOpenHelper.Z_AXIS, z);
 
-          acc_data.put(acc);
+          acc_data.put(data);
         }
         catch (org.json.JSONException e)
         {
