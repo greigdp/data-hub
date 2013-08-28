@@ -155,9 +155,6 @@ public class HubDbHelper
           data.put(HubDbOpenHelper.Y_AXIS, y);
           data.put(HubDbOpenHelper.Z_AXIS, z);
 
-          JSONObject acc = new JSONObject(); // Refactor server code.
-          acc.put("movement", data); // Tagging each JSONArray not required.
-
           acc_data.put(acc);
         }
         catch (org.json.JSONException e)
