@@ -23,7 +23,7 @@ public class DataGatheringService extends Service
 	private static final boolean Debug = true;
 
 	private final static long SYNC_PERIOD = 
-	  AlarmManager.INTERVAL_FIFTEEN_MINUTES / 3; // Sync every 5 minutes.
+	  AlarmManager.INTERVAL_FIFTEEN_MINUTES / 15; // Sync every minute.
 
 	private AlarmManager mAlarmManager;
 	private Intent mSyncIntent;
