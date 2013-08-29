@@ -64,7 +64,6 @@ public class Hub extends Activity
     }
     else
     {
-      startGatheringData();
 
     	// If Bluetooth is not on, request that it be enabled.
     	// setupLink() will then be called during onActivityResult.
@@ -87,6 +86,8 @@ public class Hub extends Activity
   {
   	super.onStart();
   	if (Debug) Log.i(TAG, "onStart called.");
+
+    startGatheringData();
   }
 
   @Override

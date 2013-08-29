@@ -16,6 +16,8 @@ import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.impl.client.DefaultHttpClient;
 
+import java.util.ArrayList;
+
 import android.app.Service;
 import android.content.Context;
 import android.content.Intent;
@@ -118,6 +120,7 @@ public class SyncService extends Service
       StringEntity stringEntity = new StringEntity(data);
       stringEntity.setContentEncoding(new BasicHeader(HTTP.CONTENT_TYPE,
                                       "application/json"));
+      Log.i(TAG, "StringEntity:\n" + stringEntity);
       httpPost.setEntity(stringEntity);
 
       HttpResponse response = httpClient.execute(httpPost);
@@ -218,9 +221,14 @@ public class SyncService extends Service
     		if (!mHasError)
     		{
     			HubDbHelper db = new HubDbHelper(SyncService.this);
-    			String movements =
-    			  db.getLatestMovement(Integer.parseInt(latestAccId)).toString();
-          updateServer(ACC_PATH, movements);
+
+    			ArrayList dataList =
+    			  db.getLatestMovement(Integer.parseInt(latestAccId));
+          for (Object data : dataList)
+          {
+            Log.i(TAG, "Sending accelerometer data:\n" + data);
+            updateServer(ACC_PATH, data.toString());  
+          }
     		}
     		if (mHasError)
     		{

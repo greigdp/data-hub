@@ -7,6 +7,7 @@ import java.io.File;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.io.Writer;
+import java.util.ArrayList;
 
 import android.content.ContentValues;
 import android.content.Context;
@@ -29,6 +30,7 @@ public class HubDbHelper
 
   private final static String DB_NAME = "hub_db.sqlite3";
   private final static String BASE_DIR = "Hub";
+  private final static int BATCH_SIZE = 5;
 
   private HubDbOpenHelper dbHelper;
   private int uid = 1; // [Fix;me: this hack adds a user id to the data.]
@@ -118,12 +120,15 @@ public class HubDbHelper
    * @param latestId
    * @return JSONArray of accelerometer samples
    */
-  public JSONArray getLatestMovement(int latestId)
+  public ArrayList getLatestMovement(int latestId)
   {
     if (Debug) Log.i(TAG, "getLatestMovement called.");
 
-    JSONArray acc_data = new JSONArray();
+    ArrayList accData = new ArrayList();
     SQLiteDatabase db = null;
+    int number_of_rows = 0;
+    int batch_size = BATCH_SIZE;
+    int number_of_batches = 0;
 
     try
     {
@@ -136,34 +141,56 @@ public class HubDbHelper
                           null,
                           HubDbOpenHelper.ID + " ASC");
 
-      while (c.moveToNext())
+      number_of_rows = c.getCount();
+      number_of_batches = number_of_rows / BATCH_SIZE;
+
+      for (int b = 0; b < number_of_batches; b = b + 1)
       {
-        int id = c.getInt(0);
-        int uid = c.getInt(1);
-        String t = c.getString(2);
-        int x = c.getInt(3);
-        int y = c.getInt(4);
-        int z = c.getInt(5);
-        JSONObject data = new JSONObject();
+        JSONArray batch = new JSONArray();
+        
+        Cursor bq = 
+          db.query(HubDbOpenHelper.ACC_TABLE_NAME,
+                   null,
+                   HubDbOpenHelper.ID + " BETWEEN " + (b * BATCH_SIZE) + 
+                     " AND " + (((b + 1) * BATCH_SIZE) - 1),
+                   null,
+                   null,
+                   null,
+                   HubDbOpenHelper.ID + " ASC");
 
-        try
+        while(bq.moveToNext())
         {
-          data.put(HubDbOpenHelper.ID, id);
-          data.put(HubDbOpenHelper.UID, uid);
-          data.put(HubDbOpenHelper.TIMESTAMP, t);
-          data.put(HubDbOpenHelper.X_AXIS, x);
-          data.put(HubDbOpenHelper.Y_AXIS, y);
-          data.put(HubDbOpenHelper.Z_AXIS, z);
+          int id = bq.getInt(0);
+          int uid = bq.getInt(1);
+          String t = bq.getString(2);
+          int x = bq.getInt(3);
+          int y = bq.getInt(4);
+          int z = bq.getInt(5);
 
-          acc_data.put(data);
+          JSONObject data = new JSONObject();
+
+          try
+          {
+            data.put(HubDbOpenHelper.ID, id);
+            data.put(HubDbOpenHelper.UID, uid);
+            data.put(HubDbOpenHelper.TIMESTAMP, t);
+            data.put(HubDbOpenHelper.X_AXIS, x);
+            data.put(HubDbOpenHelper.Y_AXIS, y);
+            data.put(HubDbOpenHelper.Z_AXIS, z);
+            batch.put(data);
+          }
+          catch (org.json.JSONException e)
+          {
+            Log.e(TAG, "Exception occured.\n" + e.getMessage());
+          }
         }
-        catch (org.json.JSONException e)
-        {
-          Log.e(TAG, "Exception occured.\n" + e.getMessage());
-        }
+
+        Log.i(TAG, "Batch:\n" + batch);
+        accData.add(batch);
       }
 
-      return acc_data;
+      if (Debug) Log.i(TAG, "Final string:\n" + accData);
+      return accData;
     }
     finally
     {
