@@ -6,9 +6,9 @@ import android.content.Intent;
 import android.util.Log;
 
 /**
- * Listen for a pending intent triggered by an {@link 
- * android.app.AlarmManager} in {@link DataGatheringService} and start 
- * {@link syncService}.
+ * Listen for a pending intent triggered by an {@code 
+ * android.app.AlarmManager} in {@code DataGatheringService} and start 
+ * {@code syncService}.
  *
  * @author jbanford
  *
