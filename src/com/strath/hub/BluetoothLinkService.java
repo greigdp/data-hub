@@ -325,7 +325,7 @@ public class BluetoothLinkService
               int yaxis = Integer.parseInt(data.get(3));
               int zaxis = Integer.parseInt(data.get(4));
 
-              // temperature data...
+              // Temperature data...
 
               HubDbHelper db = new HubDbHelper(mContext);
               AccelerometerWrapper accWrap = 

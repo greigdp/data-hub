@@ -151,8 +151,9 @@ public class HubDbHelper
         Cursor bq = 
           db.query(HubDbOpenHelper.ACC_TABLE_NAME,
                    null,
-                   HubDbOpenHelper.ID + " BETWEEN " + (b * BATCH_SIZE) + 
-                     " AND " + (((b + 1) * BATCH_SIZE) - 1),
+                   HubDbOpenHelper.ID + " BETWEEN " + 
+                     ((b * BATCH_SIZE) + latestId) + 
+                     " AND " + (((b + 1) * BATCH_SIZE) + latestId - 1),
                    null,
                    null,
                    null,
