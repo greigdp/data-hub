@@ -113,9 +113,6 @@ public class SyncService extends Service
     {
       HttpPost httpPost = new HttpPost(url);
       httpPost.setHeader("Content-type", "application/json");
-      httpPost.setHeader("Authorization", "Basic " + 
-                         Base64.encodeToString("admin:admin".getBytes(),
-                         Base64.NO_WRAP)); // Oh God. WAT?!
 
       StringEntity stringEntity = new StringEntity(data);
       stringEntity.setContentEncoding(new BasicHeader(HTTP.CONTENT_TYPE,
