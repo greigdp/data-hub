@@ -17,7 +17,6 @@ public class HubDbOpenHelper extends SQLiteOpenHelper
 
   public final static String ACC_TABLE_NAME = "accelerometer_data";
   public final static String ID = "id";
-  public final static String UID = "user_id";
   public final static String TIMESTAMP = "timestamp";
   public final static String X_AXIS = "xaxis";
   public final static String Y_AXIS = "yaxis";
@@ -49,7 +48,6 @@ public class HubDbOpenHelper extends SQLiteOpenHelper
   	                    + ACC_TABLE_NAME
   	                    + " ("
   	                    + ID + " integer primary key autoincrement, "
-  	                    + UID + " integer, "
   	                    + TIMESTAMP + " text, "
   	                    + X_AXIS + " integer, "
   	                    + Y_AXIS + " integer, "

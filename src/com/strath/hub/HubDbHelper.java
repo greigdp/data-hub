@@ -33,7 +33,6 @@ public class HubDbHelper
   private final static int BATCH_SIZE = 5;
 
   private HubDbOpenHelper dbHelper;
-  private int uid = 1; // [Fix;me: this hack adds a user id to the data.]
 
   /**
    * HubDB constructor
@@ -92,7 +91,6 @@ public class HubDbHelper
     {
       db = dbHelper.getWritableDatabase();
       ContentValues values = new ContentValues();
-      values.put(HubDbOpenHelper.UID, uid);
       values.put(HubDbOpenHelper.TIMESTAMP, accWrap.getTimestamp());
       values.put(HubDbOpenHelper.X_AXIS, accWrap.getX());
       values.put(HubDbOpenHelper.Y_AXIS, accWrap.getY());
@@ -162,18 +160,16 @@ public class HubDbHelper
         while(bq.moveToNext())
         {
           int id = bq.getInt(0);
-          int uid = bq.getInt(1);
-          String t = bq.getString(2);
-          int x = bq.getInt(3);
-          int y = bq.getInt(4);
-          int z = bq.getInt(5);
+          String t = bq.getString(1);
+          int x = bq.getInt(2);
+          int y = bq.getInt(3);
+          int z = bq.getInt(4);
 
           JSONObject data = new JSONObject();
 
           try
           {
             data.put(HubDbOpenHelper.ID, id);
-            data.put(HubDbOpenHelper.UID, uid);
             data.put(HubDbOpenHelper.TIMESTAMP, t);
             data.put(HubDbOpenHelper.X_AXIS, x);
             data.put(HubDbOpenHelper.Y_AXIS, y);
