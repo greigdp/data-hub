@@ -28,7 +28,6 @@ public class DataGatheringService extends Service
 	private AlarmManager mAlarmManager;
 	private Intent mSyncIntent;
 	private PendingIntent mSyncPendingIntent;
-	private boolean mIsSynching;
 
   @Override
   public void onCreate()
@@ -85,7 +84,6 @@ public class DataGatheringService extends Service
     	                                SystemClock.elapsedRealtime(),
     	                                SYNC_PERIOD,
     	                                mSyncPendingIntent);
-    mIsSynching = true;
   }
 
   /**
@@ -97,6 +95,5 @@ public class DataGatheringService extends Service
 
   	if (mSyncPendingIntent != null)
       mAlarmManager.cancel(mSyncPendingIntent);
-    mIsSynching = false;
   }
 }
