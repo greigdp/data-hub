@@ -89,32 +89,29 @@
             labelfont={normalsize, bf}
            ]{caption}
 
+
 % ************************************************************************* %
 
 \begin{document}
 \chapter{Data Hub: The Android App} % (fold)
 \label{cha:data_hub}
-[Fix;me: Intro to Android app. Main activity \texttt{Hub.java}. Class to set up and manage Bluetooth connections \texttt{BluetoothLinkService.java}.]
+[Fix;me: Intro to Android app. Main activity\lstinline{Hub.java}. Class to set up and manage Bluetooth connections\lstinline{BluetoothLinkService.java}.]
 \section{Receiving Bluetooth Data} % (fold)
 \label{sec:receiving_bluetooth_data}
 [Fix;me: add an overview of the section here and/or remove the following subsection heading.]
 \subsection{Initialising a Connection} % (fold)
 \label{sub:initialising_a_connection}
-Before initialising a connection some requirements must be satisfied in order that the app is able to receive data over the Bluetooth. The first is that the MAC address of the slave device sending the data must be known. To this end the MAC address is hard coded as the constant \texttt{MAC\_ADDRESS} in the main activity of the app. In the example shown in this documentation the MAC address of the test embedded system is 00:12:06:82:84 [Fix;me: update MAC address]. Future iterations of the design of the app should allow this parameter to be configurable. Details of how this might be achieved without risking losing connectivity, and therefore data, are given in Section~\ref{sec:configurable_bluetooth_mac_adress}.
+Before initialising a connection some requirements must be satisfied in order that the app is able to receive data over the Bluetooth. The first is that the MAC address of the slave device sending the data must be known. Therefore the MAC address is hard coded as the constant\lstinline{MAC_ADDRESS} in the main activity of the app. In the example shown in this documentation the MAC address of the test embedded system is 00:12:06:82:84 [Fix;me: update MAC address]. Future iterations of the design of the app should allow this parameter to be configurable. Details of how this might be achieved without risking losing connectivity, and therefore data, are given in Section~\ref{sec:configurable_bluetooth_mac_adress}.
 
-Secondly, before attempting to set up a Bluetooth connection, the app must establish that the device on which it is installed can support Bluetooth and that it has been enabled. Both of these tasks are performed in the \texttt{onCreate} lifecycle callback method as shown in Listing~\ref{lst:btsupportenablejava}. If Bluetooth is not supported the user is alerted using a toast message and the app stops running. If the local Bluetooth adapter is available it is enabled---if it is not already---by prompting the user to do so. The app is now ready to attempt to create a connection. 
+Secondly, before attempting to set up a Bluetooth connection, the app must establish that the device on which it is installed can support Bluetooth and that it has been enabled. Both of these tasks are performed in the\lstinline{onCreate} lifecycle callback method. If Bluetooth is not supported the user is alerted using a toast message and the app stops running. If the local Bluetooth adapter is available it is enabled---if it is not already---by prompting the user to do so. The app is now ready to attempt to create a connection. 
 
 \begin{lstlisting}[language=Java,
-                   caption={Check Bluetooth is supported and enabled.},
-                   label=lst:btsupportenablejava,
                    numbers=none]
 @Override
 public void onCreate(Bundle savedInstanceState)
 {
   // ...
 
-  // Get the local Bluetooth adapter and check that Bluetooth is
-  // supported.
   mBluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
   if (mBluetoothAdapter == null)
   {
@@ -126,26 +123,17 @@ public void onCreate(Bundle savedInstanceState)
   }
   else
   {
-    // If Bluetooth is not on, request that it be enabled.
-    // setupLink() will then be called during onActivityResult.
+
     if (!mBluetoothAdapter.isEnabled())
-    {
       Intent enableIntent = new Intent(BluetoothAdapter.
                                        ACTION_REQUEST_ENABLE);
-    }
-    // Bluetooth is on so set up the link session.
     else
-    {
-      if (mLinkService == null) setupLink();
-      connectDevice();
-    }
+      // Set up the link session.
   }
 }
 \end{lstlisting}
-The main activity of the app uses two methods to initiate a connection: \texttt{setupLink()} and \texttt{connectDevice()}. Each performs a simple function. A new instance of \texttt{BluetoothLinkService} is created when \texttt{setupLink()} is called. Then, when \texttt{connectDevice()} is called, a \texttt{BluetoothDevice} object representing the slave device is instantiated using \texttt{MAC\_ADDRESS} which is passed as an argument in a call of the \texttt{connect()} method to the \texttt{BluetoothLinkService} instance created in \texttt{setupLink()}. Both methods are shown in Listing~\ref{lst:setupconnectjava}.
+The main activity of the app uses two methods to initiate a connection:\lstinline{setupLink()} and\lstinline{connectDevice()}. Each performs a simple function. A new instance of\lstinline{BluetoothLinkService} is created when\lstinline{setupLink()} is called. Then, when\lstinline{connectDevice()} is called, a\lstinline{BluetoothDevice} object representing the slave device is instantiated using\lstinline{MAC_ADDRESS} which is passed as an argument in a call of the\lstinline{connect()} method to the\lstinline{BluetoothLinkService} instance created in\lstinline{setupLink()}.
 \begin{lstlisting}[language=Java,
-                   caption={The \texttt{setupLink()} and \texttt{connectDevice()} methods.},
-                   label=lst:setupconnectjava,
                    numbers=none]
 pivate void setupLink()
 { 
@@ -159,12 +147,10 @@ private void connectDevice()
 }
 \end{lstlisting}
 % subsection initiiate_a_connection (end)
-\subsection{The \texttt{BluetoothLinkService} Class} % (fold)
+\subsection{The\lstinline{BluetoothLinkService} Class} % (fold)
 \label{sub:bls}
-A \texttt{BluetoothLinkService} is created by passing an application context and handler to the constructor shown in Listing~\ref{lst:blsconstructorjava}.
+A\lstinline{BluetoothLinkService} is created by passing an application context and handler to the constructor.
 \begin{lstlisting}[language=Java,
-                   caption={The \texttt{BluetoothLinkService} constructor.},
-                   label=lst:blsconstructorjava,
                    numbers=none]
 public BluetoothLinkService(Context context, Handler handler)
 {
@@ -174,22 +160,20 @@ public BluetoothLinkService(Context context, Handler handler)
   // ...
 }
 \end{lstlisting}
-When the constructor is called in \texttt{Hub.java} (see \texttt{setupLink()} in Listing~\ref{lst:setupconnectjava}) the \texttt{this} keyword is used to pass the pass the context of the main activity, and a new handler is created to receive messages sent from the threads used by the \texttt{BluetoothLinkService}. A \texttt{BluetoothAdapter} is also instantiated to represent the default adapter of the device.
+When the constructor is called in\lstinline{Hub.java} (see\lstinline{setupLink()}) the\lstinline{this} keyword is used to pass the pass the context of the main activity, and a new handler is created to receive messages sent from the threads used by the\lstinline{BluetoothLinkService}. A\lstinline{BluetoothAdapter} is also instantiated to represent the default adapter of the device.
 
-\texttt{mHandler} is primarily used to update the user interface on changes in status of the Bluetooth connection and is discussed in detail in Sub-section~\ref{sec:the_user_interface}. The remainder of this Sub-section details the operation of \texttt{BluetoothLinkService} class.
+\texttt{mHandler} is primarily used to update the user interface on changes in status of the Bluetooth connection and is discussed in detail in Sub-section~\ref{sec:the_user_interface}. The remainder of this Sub-section details the operation of\lstinline{BluetoothLinkService} class.
 
-The \texttt{BluetoothLinkService} class sets up and manages Bluetooth connections. It uses two separate threads to connect to devices, and when connected, to receive data. These threads are controlled by three methods:
+The\lstinline{BluetoothLinkService} class sets up and manages Bluetooth connections. It uses two separate threads to connect to devices, and when connected, to receive data. These threads are controlled by three methods:
 \begin{enumerate}
-\item \texttt{connect()} to initiate a connection to a remote (slave) device,
-\item \texttt{connected()} to manage a \texttt{BluetoothLinkService} which is running a \texttt{ConnectedThread}, and
-\item \texttt{stop()} to stop all threads running as part of a \texttt{BluetoothLinkService}.
+\item\lstinline{connect()} to initiate a connection to a remote (slave) device,
+\item\lstinline{connected()} to manage a\lstinline{BluetoothLinkService} which is running a\lstinline{ConnectedThread}, and
+\item\lstinline{stop()} to stop all threads running as part of a\lstinline{BluetoothLinkService}.
 \end{enumerate}
-The \texttt{connect()} method closes any open connections, including those currently connecting, and then creates a new \texttt{ConnectThread} to establish a connection. When called \texttt{ConnectThread} instantiates a local \texttt{BluetoothSocket} using the default secure serial port protocol UUID, and a \texttt{BluetoothDevice} using the parameter passed to the \texttt{connect()} method. If this is successful the thread runs.
+The\lstinline{connect()} method closes any open connections, including those currently connecting, and then creates a new\lstinline{ConnectThread} to establish a connection. When called\lstinline{ConnectThread} instantiates a local\lstinline{BluetoothSocket} using the default secure serial port protocol UUID, and a\lstinline{BluetoothDevice} using the parameter passed to the\lstinline{connect()} method. If this is successful the thread runs.
 
-Before trying to connect, any service discovery which is running on the adapter is cancelled to prevent it from slowing the connection. The \texttt{connect()} method is then called on the socket. If a connection is established successfully, the thread is reset and the \texttt{connected()} method is called. The connection is now established. The \texttt{connect()} method and \texttt{ConnectThread} are shown in Listing~\ref{lst:connectthreadjava}.
+Before trying to connect, any service discovery which is running on the adapter is cancelled to prevent it from slowing the connection. The\lstinline{connect()} method is then called on the socket. If a connection is established successfully, the thread is reset and the\lstinline{connected()} method is called. The connection is now established.
 \begin{lstlisting}[language=Java,
-                   caption={The \texttt{connect()} method and \texttt{ConnectThread}.},
-                   label=lst:connectthreadjava,
                    numbers=none]
 public synchronized void connect(BluetoothDevice device)
 {
@@ -245,12 +229,10 @@ private class ConnectThread extends Thread
     // cancel()
   }
 \end{lstlisting}
-The \texttt{connected()} method creates a new \texttt{ConnectedThread} and starts it. The \texttt{ConnectedThread} creates a local \texttt{BluetoothSocket} from the instance passed as an argument also creates a local \texttt{InputStream}. If an \texttt{InputStream} is available form the socket the thread runs.
+The\lstinline{connected()} method creates a new\lstinline{ConnectedThread} and starts it. The\lstinline{ConnectedThread} creates a local\lstinline{BluetoothSocket} from the instance passed as an argument also creates a local\lstinline{InputStream}. If an\lstinline{InputStream} is available form the socket the thread runs.
 
-\texttt{ConnectedThread} continually listens to the \texttt{InputStream} while connected. A \texttt{BufferedReader} is created and each array of bytes sent over the Bluetooth connection is read into it using an \texttt{InputStreamReader}. Any data in the \texttt{BufferedReader} it is parsed, sent to the user interface for display and stored locally on the device. The \texttt{connected()} method and \texttt{ConnectedThread} are shown inListing~\ref{lst:connectedthreadjava}.
+\lstinline{ConnectedThread} continually listens to the\lstinline{InputStream} while connected. A\lstinline{BufferedReader} is created and each array of bytes sent over the Bluetooth connection is read into it using an\lstinline{InputStreamReader}. Any data in the\lstinline{BufferedReader} it is parsed, sent to the user interface for display and stored locally on the device.
 \begin{lstlisting}[language=Java,
-                   caption={The \texttt{connected()} method and \texttt{ConnectedThread}},
-                   label=lst:connectedthreadjava,
                    numbers=none]
   public synchronized void connected(BluetoothSocket socket,
                                      BluetoothDevice device)
@@ -318,7 +300,7 @@ The \texttt{connected()} method creates a new \texttt{ConnectedThread} and start
 % section gathering_location_data (end)
 \section{The User Interface} % (fold)
 \label{sec:the_user_interface}
-[Fix;Me: document the \texttt{Handler} in \texttt{Hub.java}.]
+[Fix;Me: document the\lstinline{Handler} in\lstinline{Hub.java}.]
 % section the_user_interface (end)
 \section{Storing Data Locally} % (fold)
 \label{sec:storing_data_locally}
