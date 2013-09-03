@@ -160,7 +160,7 @@ public BluetoothLinkService(Context context, Handler handler)
 \end{lstlisting}
 When the constructor is called in\lstinline{Hub.java} (see\lstinline{setupLink()}) the\lstinline{this} keyword is used to pass the pass the context of the main activity, and a new handler is created to receive messages sent from the threads used by the\lstinline{BluetoothLinkService}. A\lstinline{BluetoothAdapter} is also instantiated to represent the default adapter of the device.
 
-\texttt{mHandler} is primarily used to update the user interface on changes in status of the Bluetooth connection and is discussed in detail in Sub-section~\ref{sec:the_user_interface}. The remainder of this Sub-section details the operation of\lstinline{BluetoothLinkService} class.
+\lstinline{mHandler} is primarily used to update the user interface on changes in status of the Bluetooth connection and is discussed in detail in Sub-section~\ref{sec:the_user_interface}. The remainder of this Sub-section details the operation of\lstinline{BluetoothLinkService} class.
 
 The\lstinline{BluetoothLinkService} class sets up and manages Bluetooth connections. It uses two separate threads to connect to devices, and when connected, to receive data. These threads are controlled by three methods:
 \begin{enumerate}
@@ -441,7 +441,140 @@ The\lstinline{addAccSample()} method gets a writable database, adds the data to 
 % section storing_data_locally (end)
 \section{Storing Data Remotely} % (fold)
 \label{sec:storing_data_remotely}
+
+\subsection{Syncing Local Data with a Remote Database} % (fold)
+\label{sub:syncing_local_data_with_a_remote_database}
+\begin{lstlisting}[language=Java, numbers=none]
+@Override
+public void onStart()
+{
+  // ...
+  startGatheringData();
+}
+\end{lstlisting}
+\begin{lstlisting}[language=Java, numbers=none]
+@Override
+public int onStartCommand(Intent intent, int flags, int startId)
+{
+  // ...
+  mAlarmManager = (AlarmManager) getSystemService(Context.ALARM_SERVICE);
+  startSync();
+  //...
+}
+
+@Override
+public void onDestroy()
+{
+  // ...
+  stopSync();
+}
+
+private void startSync()
+{
+  mSyncIntent = 
+    new Intent(getApplicationContext(), SyncAlarmReceiver.class);
+  mSyncPendingIntent = 
+    PendingIntent.getBroadcast(getApplicationContext(), 0, mSyncIntent, 0);
+  mAlarmManager.setInexactRepeating(AlarmManager.ELAPSED_REALTIME_WAKEUP,
+                                    SystemClock.elapsedRealtime(),
+                                    SYNC_PERIOD,
+                                    mSyncPendingIntent);
+}
+
+private void stopSync()
+{
+  if (mSyncPendingIntent != null)
+    mAlarmManager.cancel(mSyncPendingIntent);
+}
+\end{lstlisting}
+\begin{lstlisting}[language=Java, numbers=none]
+@Override
+public void onReceive(Context context, Intent intent)
+{
+  Intent syncIntent = new Intent(context, SyncService.class);
+  context.startService(syncIntent);
+}
+\end{lstlisting}
+\begin{lstlisting}
+[Fix;Me: SyncService here. The whole class or just updateServer() and SyncThread()?]
+\end{lstlisting}
+\begin{lstlisting}[language=Java, numbers=none]
+public ArrayList getLatestMovement(int latestId)
+{
+  ArrayList accData = new ArrayList();
+  SQLiteDatabase db = null;
+  int number_of_rows = 0;
+  int batch_size = BATCH_SIZE;
+  int number_of_batches = 0;
+
+  try
+  {
+    db = dbHelper.getReadableDatabase();
+    Cursor c = db.query(HubDbOpenHelper.ACC_TABLE_NAME,
+                        null,
+                        HubDbOpenHelper.ID + " > " + latestId,
+                        null,
+                        null,
+                        null,
+                        HubDbOpenHelper.ID + " ASC");
+
+    number_of_rows = c.getCount();
+    number_of_batches = number_of_rows / BATCH_SIZE;
+
+    for (int b = 0; b < number_of_batches; b = b + 1)
+    {
+      JSONArray batch = new JSONArray();
+        
+      Cursor bq = 
+        db.query(HubDbOpenHelper.ACC_TABLE_NAME,
+                 null,
+                 HubDbOpenHelper.ID + " BETWEEN " + 
+                   ((b * BATCH_SIZE) + latestId) + 
+                   " AND " + (((b + 1) * BATCH_SIZE) + latestId - 1),
+                 null,
+                 null,
+                 null,
+                 HubDbOpenHelper.ID + " ASC");
+
+      while(bq.moveToNext())
+      {
+        int id = bq.getInt(0);
+        String t = bq.getString(1);
+        int x = bq.getInt(2);
+        int y = bq.getInt(3);
+        int z = bq.getInt(4);
+
+        JSONObject data = new JSONObject();
+
+        try
+        {
+          data.put(HubDbOpenHelper.ID, id);
+          data.put(HubDbOpenHelper.TIMESTAMP, t);
+          data.put(HubDbOpenHelper.X_AXIS, x);
+          data.put(HubDbOpenHelper.Y_AXIS, y);
+          data.put(HubDbOpenHelper.Z_AXIS, z);
+          batch.put(data);
+        }
+        catch (org.json.JSONException e)
+        {
+          Log.e(TAG, "Exception occured.\n" + e.getMessage());
+        }
+      }
+      accData.add(batch);
+    }
+    return accData;
+  }
+  finally
+  {
+    if (db != null) db.close();
+  }
+}
+\end{lstlisting}
+% subsection syncing_local_data_with_a_remote_database (end)
+\subsection{The Sinatra App} % (fold)
+\label{sub:the_sinatra_app}
 [Fix;me: Sinatra app here.]
+% subsection the_sinatra_app (end)
 % section storing_data_remotely (end)
 % chapter data_hub (end)
 \chapter{Testing} % (fold)
