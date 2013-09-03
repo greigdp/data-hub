@@ -17,7 +17,7 @@
 \usepackage{ragged2e}
 \RaggedRight
 
-% Prevent over-eager hypenation.
+% Prevent over-eager hyphenation.
 \hyphenpenalty=5000
 \tolerance=1000
 
@@ -103,10 +103,9 @@
 \label{sub:initialising_a_connection}
 Before initialising a connection some requirements must be satisfied in order that the app is able to receive data over the Bluetooth. The first is that the MAC address of the slave device sending the data must be known. Therefore the MAC address is hard coded as the constant\lstinline{MAC_ADDRESS} in the main activity of the app. In the example shown in this documentation the MAC address of the test embedded system is 00:12:06:82:84 [Fix;me: update MAC address]. Future iterations of the design of the app should allow this parameter to be configurable. Details of how this might be achieved without risking losing connectivity, and therefore data, are given in Section~\ref{sec:configurable_bluetooth_mac_adress}.
 
-Secondly, before attempting to set up a Bluetooth connection, the app must establish that the device on which it is installed can support Bluetooth and that it has been enabled. Both of these tasks are performed in the\lstinline{onCreate} lifecycle callback method. If Bluetooth is not supported the user is alerted using a toast message and the app stops running. If the local Bluetooth adapter is available it is enabled---if it is not already---by prompting the user to do so. The app is now ready to attempt to create a connection. 
+Secondly, before attempting to set up a Bluetooth connection, the app must establish that the device on which it is installed can support Bluetooth and that it has been enabled. Both of these tasks are performed in the\lstinline{onCreate()} lifecycle callback method. If Bluetooth is not supported the user is alerted using a toast message and the app stops running. If the local Bluetooth adapter is available it is enabled---if it is not already---by prompting the user to do so. The app is now ready to attempt to create a connection. 
 
-\begin{lstlisting}[language=Java,
-                   numbers=none]
+\begin{lstlisting}[language=Java, numbers=none]
 @Override
 public void onCreate(Bundle savedInstanceState)
 {
@@ -150,8 +149,7 @@ private void connectDevice()
 \subsection{The\lstinline{BluetoothLinkService} Class} % (fold)
 \label{sub:bls}
 A\lstinline{BluetoothLinkService} is created by passing an application context and handler to the constructor.
-\begin{lstlisting}[language=Java,
-                   numbers=none]
+\begin{lstlisting}[language=Java, numbers=none]
 public BluetoothLinkService(Context context, Handler handler)
 {
   mContext = context;
@@ -173,8 +171,7 @@ The\lstinline{BluetoothLinkService} class sets up and manages Bluetooth connecti
 The\lstinline{connect()} method closes any open connections, including those currently connecting, and then creates a new\lstinline{ConnectThread} to establish a connection. When called\lstinline{ConnectThread} instantiates a local\lstinline{BluetoothSocket} using the default secure serial port protocol UUID, and a\lstinline{BluetoothDevice} using the parameter passed to the\lstinline{connect()} method. If this is successful the thread runs.
 
 Before trying to connect, any service discovery which is running on the adapter is cancelled to prevent it from slowing the connection. The\lstinline{connect()} method is then called on the socket. If a connection is established successfully, the thread is reset and the\lstinline{connected()} method is called. The connection is now established.
-\begin{lstlisting}[language=Java,
-                   numbers=none]
+\begin{lstlisting}[language=Java, numbers=none]
 public synchronized void connect(BluetoothDevice device)
 {
   // ...
@@ -232,65 +229,64 @@ private class ConnectThread extends Thread
 The\lstinline{connected()} method creates a new\lstinline{ConnectedThread} and starts it. The\lstinline{ConnectedThread} creates a local\lstinline{BluetoothSocket} from the instance passed as an argument also creates a local\lstinline{InputStream}. If an\lstinline{InputStream} is available form the socket the thread runs.
 
 \lstinline{ConnectedThread} continually listens to the\lstinline{InputStream} while connected. A\lstinline{BufferedReader} is created and each array of bytes sent over the Bluetooth connection is read into it using an\lstinline{InputStreamReader}. Any data in the\lstinline{BufferedReader} it is parsed, sent to the user interface for display and stored locally on the device.
-\begin{lstlisting}[language=Java,
-                   numbers=none]
-  public synchronized void connected(BluetoothSocket socket,
-                                     BluetoothDevice device)
+\begin{lstlisting}[language=Java, numbers=none]
+public synchronized void connected(BluetoothSocket socket,
+                                    BluetoothDevice device)
+{ 
+  // Cancel any threads already running here.
+
+  mConnectedThread = new ConnectedThread(socket);
+  mConnectedThread.start();
+
+  // ...
+}
+
+private class ConnectedThread extends Thread
+{
+  private final BluetoothSocket mSocket;
+  private final InputStream mInStream;  
+
+  public ConnectedThread(BluetoothSocket socket)
   {
-    // Cancel any threads already running here.
+    mSocket = socket;
+    InputStream tmpIn = null;  
 
-    mConnectedThread = new ConnectedThread(socket);
-    mConnectedThread.start();
+    try
+    {
+      tmpIn = socket.getInputStream();
+    }
+    catch (IOException e)
+    {
+      // ...
+    }  
 
-    // ...
+    mInStream = tmpIn;
   }
 
-  private class ConnectedThread extends Thread
+  public void run()
   {
-    private final BluetoothSocket mSocket;
-    private final InputStream mInStream;  
-
-    public ConnectedThread(BluetoothSocket socket)
+    while (true)
     {
-      mSocket = socket;
-      InputStream tmpIn = null;  
-
       try
       {
-        tmpIn = socket.getInputStream();
+        BufferedReader reader = new BufferedReader(
+          new InputStreamReader(mInStream));
+        String line;  
+
+        while ((line = reader.readLine()) != null)
+        {
+          // Save data to DB and send to UI.
+        }
       }
       catch (IOException e)
       {
         // ...
-      }  
-
-      mInStream = tmpIn;
-    }
-
-    public void run()
-    {
-      while (true)
-      {
-        try
-        {
-          BufferedReader reader = new BufferedReader(
-            new InputStreamReader(mInStream));
-          String line;  
-
-          while ((line = reader.readLine()) != null)
-          {
-            // Save data to DB and send to UI.
-          }
-        }
-        catch (IOException e)
-        {
-          // ...
-        }
       }
     }
-
-    // cancel()
   }
+
+  // cancel()
+}
 \end{lstlisting}
 % subsection bluetoothlinkservice (end)
 % section receiving_bluetooth_data (end)
@@ -304,11 +300,148 @@ The\lstinline{connected()} method creates a new\lstinline{ConnectedThread} and s
 % section the_user_interface (end)
 \section{Storing Data Locally} % (fold)
 \label{sec:storing_data_locally}
-[Fix;me: document parsing Bluetooth input stream here?]
+Data is stored locally in an SQLite database on the SD card of the device. Each line of data that is received via Bluetooth is parsed and stored by the\lstinline{BluetoothLinkService}. Comma-separated values are saved as elements of an array list and local variables representing each sample value are instantiated. A new\lstinline{HubDdHelper} is then created along with a new\lstinline{AccelerometerWrapper}, each of the samples values is added to the \lstinline{AccelerometerWrapper}, and the data is added to the database by passing the \lstinline{AccelerometerWrapper} as an argument to a call to\lstinline{addAccSample()}.
+\begin{lstlisting}[language=Java,
+                   numbers=none]
+while ((line = reader.readLine()) != null)
+{
+  List<String> data = Arrays.asList(line.split(","));
+  if (data.size() == 7)
+  {
+    if (Debug) Log.i(TAG, "Received Data: " + line);  
+
+    String timestamp = data.get(0);
+    int xaxis = Integer.parseInt(data.get(2));
+    int yaxis = Integer.parseInt(data.get(3));
+    int zaxis = Integer.parseInt(data.get(4));
+
+    // Temperature data...
+
+  HubDbHelper db = new HubDbHelper(mContext);
+  AccelerometerWrapper accWrap = 
+    new AccelerometerWrapper(timestamp, xaxis, yaxis, zaxis);
+  db.addAccSample(accWrap);
+}
+\end{lstlisting}
+When a\lstinline{HubDbHelper} is instantiated, by passing the application context\lstinline{mContext} to the constructor (which was passed to the\lstinline{BluetoothLinkService} from the main activity), it constructs a sting representation of the file path to the database and uses the application context and file path to create a\lstinline{HubDbOpenHelper}.
+\begin{lstlisting}[language=Java, numbers=none]
+private final static String DB_NAME = "hub_db.sqlite3";
+private final static String BASE_DIR = "Hub";
+
+public HubDbHelper(Context context)
+{
+  String dbPath = HubDbHelper.getDbPath() + "/" + DB_NAME;
+  dbHelper = new HubDbOpenHelper(context, dbPath);
+}
+
+private static String getDbPath()
+{
+  String path = Environment.getExternalStorageDirectory()
+                           .getPath() + "/" + BASE_DIR;
+
+  File dbDir = new File(path);
+  if (!dbDir.isDirectory())
+  {
+    try
+    {
+      if (Debug) Log.i(TAG, "Trying to create " + path);
+      dbDir.mkdirs();
+    }
+    catch (Exception e)
+    {
+      final Writer result = new StringWriter();
+      final PrintWriter printWriter = new PrintWriter(result);
+      e.printStackTrace(printWriter);
+      Log.e(TAG, result.toString());
+    }
+  }
+  return path;
+}
+\end{lstlisting}
+The\lstinline{HubDbOpenHelper} class extends\lstinline{SQLiteOpenHelper} and either opens a database located at the file path directory passed to the constructor, or creates a database at the file path directory if one does not yet exist. The database is created by overriding the \lstinline{onCreate()} method of the helper class: an SQLite database is passed as an argument, and the SQL query required to create the database is then passed to a call to the\lstinline{execSQL()} method.
+\begin{lstlisting}[language=Java, numbers=none]
+public final static String ACC_TABLE_NAME = "accelerometer_data";
+public final static String ID = "id";
+public final static String TIMESTAMP = "timestamp";
+public final static String X_AXIS = "xaxis";
+public final static String Y_AXIS = "yaxis";
+public final static String Z_AXIS = "zaxis";
+
+public HubDbOpenHelper(Context context, String path)
+{
+  super(context, path, null, 1);
+}
+
+@Override
+public void onCreate(SQLiteDatabase db)
+{
+  String createAccSQL = "create table "
+                      + ACC_TABLE_NAME
+                      + " ("
+                      + ID + " integer primary key autoincrement, "
+                      + TIMESTAMP + " text, "
+                      + X_AXIS + " integer, "
+                      + Y_AXIS + " integer, "
+                      + Z_AXIS + " integer);";
+  db.execSQL(createAccSQL);
+}
+\end{lstlisting}
+The\lstinline{AccelerometerWrapper} class provides an abstraction of the data contained in each accelerometer sample. It is a simple class. Each datum is passed to the constructor as an argument and a corresponding instance variable is set according to the value of the argument. These instance variables are private and can not be altered after they are set by the constructor. Accessor methods are available to retrieve the values of each datum in the accelerometer sample.
+\begin{lstlisting}[language=Java, numbers=none]
+public class AccelerometerWrapper
+{
+  private String timestamp;
+  private int xaxis;
+  private int yaxis;
+  private int zaxis;
+
+  public AccelerometerWrapper(String t, int x, int y, int z)
+  {
+    this.timestamp = t;
+    this.xaxis = x;
+    this.yaxis = y;
+    this.zaxis = z;
+  }
+
+  public String getTimestamp()
+  {
+    return timestamp;
+  }
+
+  // Get x axis, y axis, and z axis too.
+}
+\end{lstlisting}
+The\lstinline{addAccSample()} method gets a writable database, adds the data to a\lstinline{ContentValues} object and attempts to add this object to the database. If the insertion is successful the database is closed or, if there is a problem, an\lstinline{SQLExeption} is thrown.
+\begin{lstlisting}[language=Java, numbers=none]
+  public synchronized void addAccSample(AccelerometerWrapper accWrap)
+  {
+    SQLiteDatabase db = null;
+    try
+    {
+      db = dbHelper.getWritableDatabase();
+      ContentValues values = new ContentValues();
+      values.put(HubDbOpenHelper.TIMESTAMP, accWrap.getTimestamp());
+      values.put(HubDbOpenHelper.X_AXIS, accWrap.getX());
+      values.put(HubDbOpenHelper.Y_AXIS, accWrap.getY());
+      values.put(HubDbOpenHelper.Z_AXIS, accWrap.getZ());
+      db.insertOrThrow(HubDbOpenHelper.ACC_TABLE_NAME,
+                       HubDbOpenHelper.TIMESTAMP,
+                       values);
+    }
+    catch(SQLException e)
+    {
+      Log.e(TAG, "Could not insert record:\n" + e);
+    }
+    finally
+    {
+      if (db != null) db.close();
+    }
+  }
+\end{lstlisting}
 % section storing_data_locally (end)
 \section{Storing Data Remotely} % (fold)
 \label{sec:storing_data_remotely}
-
+[Fix;me: Sinatra app here.]
 % section storing_data_remotely (end)
 % chapter data_hub (end)
 \chapter{Testing} % (fold)
@@ -319,7 +452,13 @@ The\lstinline{connected()} method creates a new\lstinline{ConnectedThread} and s
 % section accelerometer_data (end)
 \section{Receiving and Storing Data} % (fold)
 \label{sec:receiving_data}
-
+[Fix;me: three tests:
+\begin{itemize}
+  \item comparison of first n records,
+  \item comparison of n randomly selected records, and
+  \item trial deployment.
+\end{itemize}
+]
 % section receiving and storing_data (end)
 \section{Syncing Stored Data with a Server} % (fold)
 \label{sec:syncing_stored_data_with_a_server}
