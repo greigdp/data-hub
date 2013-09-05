@@ -495,8 +495,141 @@ public void onReceive(Context context, Intent intent)
   context.startService(syncIntent);
 }
 \end{lstlisting}
-\begin{lstlisting}
-[Fix;Me: SyncService here. The whole class or just updateServer() and SyncThread()?]
+\begin{lstlisting}[language=Java, numbers=none]
+private PowerManager mPowerManager;
+private PowerManager.WakeLock mWakeLock;
+
+@Override
+public void onCreate()
+{
+  super.onCreate();
+    
+  mPowerManager = (PowerManager) getSystemService(Context.POWER_SERVICE);
+  mWakeLock =
+    mPowerManager.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, TAG);
+  mWakeLock.acquire();
+}
+\end{lstlisting}
+\begin{lstlisting}[language=Java, numbers=none]
+private SyncThread mSyncThread;
+
+@Override
+public int onStartCommand(Intent intent, int flags, int startId)
+{
+  mSyncThread = new SyncThread();
+  mSyncThread.start();
+
+  return 0;
+}
+\end{lstlisting}
+\begin{lstlisting}[language=Java, numbers=none]
+private static final int CONNECTION_TIMEOUT = 10000;
+private static final String LATEST_ACC_PATH =
+    "http://sederunt.org/movements/latest";
+private static final String ACC_PATH =
+    "http://sederunt.org/movements/input";
+private static final String CHARSET = "UTF-8";
+
+private class SyncThread extends Thread
+{
+  public SyncThread()
+  {
+    // Empty constructor?
+  }
+
+  public void run()
+  {
+    String latestAccId = "";
+    DefaultHttpClient httpClient =
+        new DefaultHttpClient(new BasicHttpParams());
+      HttpConnectionParams.setConnectionTimeout(httpClient.getParams(),
+                                                CONNECTION_TIMEOUT);
+
+    try
+    {
+      HttpGet getLatestAcc = new HttpGet(LATEST_ACC_PATH);
+      HttpResponse latestAcc = httpClient.execute(getLatestAcc);
+      int statusCode = latestAcc.getStatusLine().getStatusCode();
+
+      if(statusCode == HttpStatus.SC_OK)
+      {
+        HttpEntity httpEntity = latestAcc.getEntity();
+        if(httpEntity != null)
+        {
+          latestAccId = EntityUtils.toString(httpEntity,
+                                             SyncService.CHARSET);
+          latestAccId = latestAccId.replace("\n", "").replace("\r", "");
+        }
+      }
+    }
+    catch (Exception e)
+    {
+      Log.e(SyncService.TAG, "Exception occured: " + e.getMessage());
+    }
+
+    HubDbHelper db = new HubDbHelper(SyncService.this);
+
+    ArrayList dataList =
+      db.getLatestMovement(Integer.parseInt(latestAccId));
+    for (Object data : dataList)
+    {
+      updateServer(ACC_PATH, data.toString());
+    }
+  }
+
+  public void cancel()
+  {
+    // Empty method?
+  }
+}
+\end{lstlisting}
+\begin{lstlisting}[language=Java, numbers=none]
+private int updateServer(String url, String data)
+{    
+  HttpParams mParams = new BasicHttpParams();
+  HttpConnectionParams.setConnectionTimeout(mParams, CONNECTION_TIMEOUT);
+  HttpConnectionParams.setSoTimeout(mParams, CONNECTION_TIMEOUT);
+  HttpClient httpClient = new DefaultHttpClient(mParams);
+
+  try
+  {
+    HttpPost httpPost = new HttpPost(url);
+    httpPost.setHeader("Content-type", "application/json");
+
+    StringEntity stringEntity = new StringEntity(data);
+    stringEntity.setContentEncoding(new BasicHeader(HTTP.CONTENT_TYPE,
+                                      "application/json"));
+    httpPost.setEntity(stringEntity);
+
+    HttpResponse response = httpClient.execute(httpPost);
+    HttpEntity entity = response.getEntity();
+    StatusLine status = response.getStatusLine();
+    int statusCode = status.getStatusCode();
+
+    if (statusCode == HttpStatus.SC_OK)
+    {
+      return 0;
+    }
+    else
+    {
+      return -1;
+    }
+  catch (Exception e)
+  {
+    Log.e(TAG, "Exception occured. \n" + e.getMessage());
+
+    return -1;
+  }
+}
+\end{lstlisting}
+\begin{lstlisting}[language=Java, numbers=none]
+@Override
+public void onDestroy()
+{
+  super.onDestroy();
+
+  mWakeLock.release();
+}
 \end{lstlisting}
 \begin{lstlisting}[language=Java, numbers=none]
 public ArrayList getLatestMovement(int latestId)
