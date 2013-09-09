@@ -42,8 +42,12 @@ public class SyncService extends Service
   private static final int CONNECTION_TIMEOUT = 10000;
   private static final String LATEST_ACC_PATH =
     "http://sederunt.org/movements/latest";
+  private static final String LATEST_TEMP_PATH =
+    "http://sederunt.org/temperatures/latest";
   private static final String ACC_PATH =
     "http://sederunt.org/movements/input";
+  private static final String TEMP_PATH =
+    "http://sederunt.org/temperatures/input";
   private static final String CHARSET = "UTF-8";
 
   @Override
@@ -96,7 +100,7 @@ public class SyncService extends Service
    * @param url The URL of the server.
    * @param data The data to be sent.
    */
-  private int updateServer(String url, String data)
+  private void updateServer(String url, String data)
   {
     if (Debug) Log.i(TAG, "updateServer called.");
     
@@ -125,21 +129,21 @@ public class SyncService extends Service
       {
         if (Debug) Log.i(TAG, "Status code is " + statusCode + ". Syncing.");
 
-        return 0;
+        // return 0;
       }
       else
       {
         if (Debug)
           Log.i(TAG, "Status code is " + statusCode + ". Did not sync.");
 
-        return -1;
+        // return -1;
       }
     }
     catch (Exception e)
     {
       Log.e(TAG, "Exception occured. \n" + e.getMessage());
 
-      return -1;
+      // return -1;
     }
   }
 
@@ -158,18 +162,20 @@ public class SyncService extends Service
       if (Debug) Log.i(SyncService.TAG, "Start SyncThread.");
 
       String latestAccId = "";
+      String latestTempId = "";
       DefaultHttpClient httpClient =
           new DefaultHttpClient(new BasicHttpParams());
         HttpConnectionParams.setConnectionTimeout(httpClient.getParams(),
                                                   CONNECTION_TIMEOUT);
 
+      // send accelerometer data to the server
       try
       {
         HttpGet getLatestAcc = new HttpGet(LATEST_ACC_PATH);
         HttpResponse latestAcc = httpClient.execute(getLatestAcc);
-        int statusCode = latestAcc.getStatusLine().getStatusCode();
+        int statusCode1 = latestAcc.getStatusLine().getStatusCode();
 
-        if(statusCode == HttpStatus.SC_OK)
+        if(statusCode1 == HttpStatus.SC_OK)
         {
           HttpEntity httpEntity = latestAcc.getEntity();
           if(httpEntity != null)
@@ -185,11 +191,32 @@ public class SyncService extends Service
             if (Debug) Log.i(SyncService.TAG, "Server did not respond.");
           }
         }
+
+        HttpGet getLatestTemp = new HttpGet(LATEST_TEMP_PATH);
+        HttpResponse latestTemp = httpClient.execute(getLatestTemp);
+        int statusCode2 = latestTemp.getStatusLine().getStatusCode();
+
+        if(statusCode2 == HttpStatus.SC_OK)
+        {
+          HttpEntity httpEntity = latestTemp.getEntity();
+          if(httpEntity != null)
+          {
+            latestTempId = EntityUtils.toString(httpEntity,
+                                               SyncService.CHARSET);
+            latestTempId = latestTempId.replace("\n", "").replace("\r", "");
+            if (Debug) Log.i(SyncService.TAG,
+                             "Latest ID on server is " + latestTempId);
+          }
+          else
+          {
+            if (Debug) Log.i(SyncService.TAG, "Server did not respond.");
+          }
+        }
         else
         {
           if (Debug) Log.i(SyncService.TAG,
                            "Server responded with status code " + 
-                           statusCode);
+                           statusCode1 + " " + statusCode2);
         }
       }
       catch (Exception e)
@@ -197,14 +224,25 @@ public class SyncService extends Service
         Log.e(SyncService.TAG, "Exception occured: " + e.getMessage());
       }
 
-      HubDbHelper db = new HubDbHelper(SyncService.this);
+      HubDbHelper accDb = new HubDbHelper(SyncService.this);
+      HubDbHelper tempDb = new HubDbHelper(SyncService.this);
 
-      ArrayList dataList =
-        db.getLatestMovement(Integer.parseInt(latestAccId));
-      for (Object data : dataList)
+      ArrayList accDataList =
+        accDb.getLatestMovement(Integer.parseInt(latestAccId));
+      ArrayList tempDataList =
+        tempDb.getLatestTemperature(Integer.parseInt(latestTempId));
+
+      // Test temp data only for now
+      // for (Object data : accDataList)
+      // {
+      //   Log.i(TAG, "Sending accelerometer data:\n" + data);
+      //   updateServer(ACC_PATH, data.toString());
+      // }
+
+      for (Object data : tempDataList)
       {
-        Log.i(TAG, "Sending accelerometer data:\n" + data);
-        updateServer(ACC_PATH, data.toString());
+        Log.i(TAG, "Sending temperature data:\n" + data);
+        updateServer(TEMP_PATH, data.toString());
       }
     }
 

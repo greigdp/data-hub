@@ -144,7 +144,7 @@ public class HubDbHelper
   }
 
   /**
-   * Return a JSONArray of all row in the accelerometer table with an id
+   * Return a JSONArray of all rows in the accelerometer table with an id
    * greater than {@code latestId}
    *
    * @param latestId
@@ -220,6 +220,88 @@ public class HubDbHelper
 
       if (Debug) Log.i(TAG, "Final string:\n" + accData);
       return accData;
+    }
+    finally
+    {
+      if (db != null) db.close();
+    }
+  }
+
+  /**
+   * Return a JSONArray of all rows in the temperature table with an id
+   * greater than {@code latestId}
+   *
+   * @param latestId
+   * @return JSONArray of accelerometer samples
+   */
+  public ArrayList getLatestTemperature(int latestId)
+  {
+    if (Debug) Log.i(TAG, "getLatestTemperature called.");
+
+    ArrayList tempData = new ArrayList();
+    SQLiteDatabase db = null;
+    int number_of_rows = 0;
+    int batch_size = BATCH_SIZE;
+    int number_of_batches = 0;
+
+    try
+    {
+      db = dbHelper.getReadableDatabase();
+      Cursor c = db.query(HubDbOpenHelper.TEMP_TABLE_NAME,
+                          null,
+                          HubDbOpenHelper.ID + " > " + latestId,
+                          null,
+                          null,
+                          null,
+                          HubDbOpenHelper.ID + " ASC");
+
+      number_of_rows = c.getCount();
+      number_of_batches = number_of_rows / BATCH_SIZE;
+
+      for (int b = 0; b < number_of_batches; b = b + 1)
+      {
+        JSONArray batch = new JSONArray();
+        
+        Cursor bq = 
+          db.query(HubDbOpenHelper.TEMP_TABLE_NAME,
+                   null,
+                   HubDbOpenHelper.ID + " BETWEEN " + 
+                     ((b * BATCH_SIZE) + latestId) + 
+                     " AND " + (((b + 1) * BATCH_SIZE) + latestId - 1),
+                   null,
+                   null,
+                   null,
+                   HubDbOpenHelper.ID + " ASC");
+
+        while(bq.moveToNext())
+        {
+          int id = bq.getInt(0);
+          String t = bq.getString(1);
+          int t1 = bq.getInt(2);
+          int t2 = bq.getInt(3);
+
+          JSONObject data = new JSONObject();
+
+          try
+          {
+            data.put(HubDbOpenHelper.ID, id);
+            data.put(HubDbOpenHelper.TIMESTAMP, t);
+            data.put(HubDbOpenHelper.TEMP_1, t1);
+            data.put(HubDbOpenHelper.TEMP_2, t2);
+            batch.put(data);
+          }
+          catch (org.json.JSONException e)
+          {
+            Log.e(TAG, "Exception occured.\n" + e.getMessage());
+          }
+        }
+
+        Log.i(TAG, "Batch:\n" + batch);
+        tempData.add(batch);
+      }
+
+      if (Debug) Log.i(TAG, "Final string:\n" + tempData);
+      return tempData;
     }
     finally
     {
