@@ -98,7 +98,7 @@ public class HubDbHelper
       db.insertOrThrow(HubDbOpenHelper.ACC_TABLE_NAME,
                        HubDbOpenHelper.TIMESTAMP,
                        values);
-      if (Debug) Log.i(TAG, "Record added.");
+      if (Debug) Log.i(TAG, "Acc record added.");
     }
     catch(SQLException e)
     {
@@ -110,6 +110,38 @@ public class HubDbHelper
       if (db != null) db.close();
     }
 	}
+
+  /**
+   * Add a temperature sample to the db.
+   * @param tempWrap The TemperatureWrapper containing data to be added. 
+   */
+  public synchronized void addTempSample(TemperatureWrapper tempWrap)
+  {
+    if (Debug) Log.i(TAG, "Adding a record to the temperature table");
+
+    SQLiteDatabase db = null;
+    try
+    {
+      db = dbHelper.getWritableDatabase();
+      ContentValues values = new ContentValues();
+      values.put(HubDbOpenHelper.TIMESTAMP, tempWrap.getTimestamp());
+      values.put(HubDbOpenHelper.TEMP_1, tempWrap.getTemp1());
+      values.put(HubDbOpenHelper.TEMP_2, tempWrap.getTemp2());
+      db.insertOrThrow(HubDbOpenHelper.TEMP_TABLE_NAME,
+                       HubDbOpenHelper.TIMESTAMP,
+                       values);
+      if (Debug) Log.i(TAG, "Temp record added: " + values);
+    }
+    catch(SQLException e)
+    {
+      Log.e(TAG, "Could not insert record:\n" + e);
+    }
+    finally
+    {
+      if (Debug) Log.i(TAG, "Closing database.");
+      if (db != null) db.close();
+    }
+  }
 
   /**
    * Return a JSONArray of all row in the accelerometer table with an id

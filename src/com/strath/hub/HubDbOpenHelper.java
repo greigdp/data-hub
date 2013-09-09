@@ -16,11 +16,14 @@ public class HubDbOpenHelper extends SQLiteOpenHelper
 	private static final boolean Debug = true;
 
   public final static String ACC_TABLE_NAME = "accelerometer_data";
+  public final static String TEMP_TABLE_NAME = "temperature_data";
   public final static String ID = "id";
   public final static String TIMESTAMP = "timestamp";
   public final static String X_AXIS = "xaxis";
   public final static String Y_AXIS = "yaxis";
   public final static String Z_AXIS = "zaxis";
+  public final static String TEMP_1 = "temp1";
+  public final static String TEMP_2 = "temp2"; 
 
   /**
    * Construct a PatientDbOpenHelper object.
@@ -35,7 +38,8 @@ public class HubDbOpenHelper extends SQLiteOpenHelper
   }
 
   /**
-   * Create a new table in the hub_db.sqlite3 for accelerometer data.
+   * Create new tables in the hub_db.sqlite3 for accelerometer and
+   * temperature data.
    *
    * @param db SQLiteDatabase object representing hub_db.sqlite3
    */
@@ -53,6 +57,17 @@ public class HubDbOpenHelper extends SQLiteOpenHelper
   	                    + Y_AXIS + " integer, "
   	                    + Z_AXIS + " integer);";
     db.execSQL(createAccSQL);
+    if (Debug) Log.i(TAG, "Create the accelerometer table.");
+
+    String createTempSQL = "create table " 
+                         + TEMP_TABLE_NAME
+                         + " (" 
+                         + ID + " integer primary key autoincrement, "
+                         + TIMESTAMP + " text, "
+                         + TEMP_1 + " integer, "
+                         + TEMP_2 + " integer);";
+    db.execSQL(createTempSQL);
+    if (Debug) Log.i(TAG, "Create the temperature table.");
   }
 
   /** Stub to keep the compiler happy. */
