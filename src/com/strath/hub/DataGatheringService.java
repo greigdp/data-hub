@@ -5,15 +5,16 @@ import android.app.PendingIntent;
 import android.app.Service;
 import android.content.Context;
 import android.content.Intent;
+import android.location.LocationManager;
 import android.os.IBinder;
 import android.os.SystemClock;
 import android.util.Log;
 
 /**
- * Service which controls starting and stopping of gathering data. It
- * currently only controls the syncing of external data---received via
- * Bluetooth---to the server but the gathering of device context data
- * (such as location data) could also be controlled from here.
+ * Service which controls starting and stopping gathering data. It
+ * currently controls the syncing of external data---received via
+ * Bluetooth---to the server and the gathering of device context data
+ * (such as location data).
  *
  * @author jbanford
  */
@@ -24,10 +25,15 @@ public class DataGatheringService extends Service
 
 	private final static long SYNC_PERIOD = 
 	  AlarmManager.INTERVAL_FIFTEEN_MINUTES / 15; // Sync every minute.
+  private final static long GPS_UPDATE_PERIOD = 60000; // 5 mins.
+  private final static long NETWORK_UPDATE_PERIOD = 60000;
 
 	private AlarmManager mAlarmManager;
 	private Intent mSyncIntent;
 	private PendingIntent mSyncPendingIntent;
+
+  private LocationManager mLocationManager;
+  private LocationReceiver mLocationReceiver;
 
   @Override
   public void onCreate()
@@ -54,6 +60,7 @@ public class DataGatheringService extends Service
   	super.onStartCommand(intent, flags, startId);
 
     mAlarmManager = (AlarmManager) getSystemService(Context.ALARM_SERVICE);
+    startGathering();
     startSync();
 
   	return 0;
@@ -66,6 +73,7 @@ public class DataGatheringService extends Service
 
   	super.onDestroy();
 
+    stopGathering();
   	stopSync();
   }
 
@@ -95,5 +103,29 @@ public class DataGatheringService extends Service
 
   	if (mSyncPendingIntent != null)
       mAlarmManager.cancel(mSyncPendingIntent);
+  }
+
+  private void startGathering()
+  {
+    if (Debug) Log.i(TAG, "startGathering called.");
+
+    mLocationReceiver = new LocationReceiver(getApplicationContext());
+    mLocationManager
+      = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
+    mLocationManager.requestLocationUpdates(LocationManager.NETWORK_PROVIDER,
+                                            NETWORK_UPDATE_PERIOD, 
+                                            0, 
+                                            mLocationReceiver);
+    mLocationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER,
+                                            GPS_UPDATE_PERIOD,
+                                            0,
+                                            mLocationReceiver);
+  }
+
+  private void stopGathering()
+  {
+    if (Debug) Log.i(TAG, "stopGathering called.");
+
+    mLocationManager.removeUpdates(mLocationReceiver);
   }
 }
