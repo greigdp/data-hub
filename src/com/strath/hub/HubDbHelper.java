@@ -148,7 +148,33 @@ public class HubDbHelper
    */
   public synchronized void addLocation(LocationWrapper location)
   {
-    // Stub.
+    // Add interaction to the db
+    if(Debug) Log.i(TAG, "Adding record to locations table");
+
+    SQLiteDatabase db = null;
+    try
+    {
+      db = dbHelper.getWritableDatabase();
+      ContentValues values = new ContentValues();
+      values.put(HubDbOpenHelper.TIMESTAMP, location.getTimestamp());
+      values.put(HubDbOpenHelper.PROVIDER, location.getProvider());
+      values.put(HubDbOpenHelper.LATITUDE, location.getLatitude());
+      values.put(HubDbOpenHelper.LONGITUDE, location.getLongitude());
+      values.put(HubDbOpenHelper.ACCURACY, location.getAccuracy());
+      db.insertOrThrow(HubDbOpenHelper.LOC_TABLE_NAME,
+                       HubDbOpenHelper.TIMESTAMP,
+                       values);
+      if (Debug) Log.i(TAG, "Location record added: " + values);     
+    } 
+    catch (SQLException e)
+    {
+      Log.i(TAG, "Could not insert record:\n" + e);
+    } 
+    finally
+    {
+      Log.i(TAG, "Closing database");
+      if (db != null) db.close();
+    }
   }
 
   /**

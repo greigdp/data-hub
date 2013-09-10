@@ -17,13 +17,18 @@ public class HubDbOpenHelper extends SQLiteOpenHelper
 
   public final static String ACC_TABLE_NAME = "accelerometer_data";
   public final static String TEMP_TABLE_NAME = "temperature_data";
+  public final static String LOC_TABLE_NAME = "location_data";
   public final static String ID = "id";
   public final static String TIMESTAMP = "timestamp";
   public final static String X_AXIS = "xaxis";
   public final static String Y_AXIS = "yaxis";
   public final static String Z_AXIS = "zaxis";
   public final static String TEMP_1 = "temp1";
-  public final static String TEMP_2 = "temp2"; 
+  public final static String TEMP_2 = "temp2";
+  public final static String PROVIDER = "provider";
+  public final static String LATITUDE = "latitude";
+  public final static String LONGITUDE = "longitude";
+  public final static String ACCURACY = "accuracy";
 
   /**
    * Construct a PatientDbOpenHelper object.
@@ -67,7 +72,18 @@ public class HubDbOpenHelper extends SQLiteOpenHelper
                          + TEMP_1 + " integer, "
                          + TEMP_2 + " integer);";
     db.execSQL(createTempSQL);
-    if (Debug) Log.i(TAG, "Create the temperature table.");
+
+    if(Debug) Log.i(TAG, "Create the location table.");
+    String createLocSQL = "create table " 
+                    + LOC_TABLE_NAME 
+                    + " (" 
+                    + ID + " integer primary key autoincrement, "
+                    + TIMESTAMP + " datetime, "
+                    + PROVIDER + " text, "
+                    + LATITUDE + " real, "
+                    + LONGITUDE + " real, "
+                    + ACCURACY + " real);";
+    db.execSQL(createLocSQL);
   }
 
   /** Stub to keep the compiler happy. */
