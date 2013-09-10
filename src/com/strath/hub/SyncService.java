@@ -37,7 +37,8 @@ public class SyncService extends Service
 
   private PowerManager mPowerManager;
   private PowerManager.WakeLock mWakeLock;
-  private SyncThread mSyncThread;
+  private SyncTemp mSyncTemp;
+  private SyncAcc mSyncAcc;
 
   private static final int CONNECTION_TIMEOUT = 10000;
   private static final String LATEST_ACC_PATH =
@@ -78,8 +79,11 @@ public class SyncService extends Service
   {
     if (Debug) Log.i(TAG, "onStartCommand called: " + intent);
 
-    mSyncThread = new SyncThread();
-    mSyncThread.start();
+    mSyncTemp = new SyncTemp();
+    mSyncAcc = new SyncAcc();
+
+    mSyncTemp.start();
+    mSyncAcc.start();
 
     return 0;
   }
@@ -100,7 +104,7 @@ public class SyncService extends Service
    * @param url The URL of the server.
    * @param data The data to be sent.
    */
-  private void updateServer(String url, String data)
+  private int updateServer(String url, String data)
   {
     if (Debug) Log.i(TAG, "updateServer called.");
     
@@ -129,74 +133,53 @@ public class SyncService extends Service
       {
         if (Debug) Log.i(TAG, "Status code is " + statusCode + ". Syncing.");
 
-        // return 0;
+        return 0;
       }
       else
       {
         if (Debug)
           Log.i(TAG, "Status code is " + statusCode + ". Did not sync.");
 
-        // return -1;
+        return -1;
       }
     }
     catch (Exception e)
     {
       Log.e(TAG, "Exception occured. \n" + e.getMessage());
 
-      // return -1;
+      return -1;
     }
   }
-
+  
   /**
-   * Perform the syncronisation with the server in a separate thread.
+   * Perform the syncronisation of temperature data to the server in a
+   * separate thread.
    */
-  private class SyncThread extends Thread
+  private class SyncTemp extends Thread
   {
-    public SyncThread()
+    public SyncTemp()
     {
-      // Empty constructor?
+      // Empty constructor.
     }
 
     public void run()
     {
-      if (Debug) Log.i(SyncService.TAG, "Start SyncThread.");
+      if (Debug) Log.i(SyncService.TAG, "Start SyncTemp.");
 
-      String latestAccId = "";
       String latestTempId = "";
       DefaultHttpClient httpClient =
-          new DefaultHttpClient(new BasicHttpParams());
-        HttpConnectionParams.setConnectionTimeout(httpClient.getParams(),
+        new DefaultHttpClient(new BasicHttpParams());
+      HttpConnectionParams.setConnectionTimeout(httpClient.getParams(),
                                                   CONNECTION_TIMEOUT);
 
-      // send accelerometer data to the server
       try
       {
-        HttpGet getLatestAcc = new HttpGet(LATEST_ACC_PATH);
-        HttpResponse latestAcc = httpClient.execute(getLatestAcc);
-        int statusCode1 = latestAcc.getStatusLine().getStatusCode();
-
-        if(statusCode1 == HttpStatus.SC_OK)
-        {
-          HttpEntity httpEntity = latestAcc.getEntity();
-          if(httpEntity != null)
-          {
-            latestAccId = EntityUtils.toString(httpEntity,
-                                               SyncService.CHARSET);
-            latestAccId = latestAccId.replace("\n", "").replace("\r", "");
-            if (Debug) Log.i(SyncService.TAG,
-                             "Latest ID on server is " + latestAccId);
-          }
-          else
-          {
-            if (Debug) Log.i(SyncService.TAG, "Server did not respond.");
-          }
-        }
 
         HttpGet getLatestTemp = new HttpGet(LATEST_TEMP_PATH);
         HttpResponse latestTemp = httpClient.execute(getLatestTemp);
-        int statusCode2 = latestTemp.getStatusLine().getStatusCode();
+        int statusCode = latestTemp.getStatusLine().getStatusCode();
 
-        if(statusCode2 == HttpStatus.SC_OK)
+        if(statusCode == HttpStatus.SC_OK)
         {
           HttpEntity httpEntity = latestTemp.getEntity();
           if(httpEntity != null)
@@ -216,7 +199,81 @@ public class SyncService extends Service
         {
           if (Debug) Log.i(SyncService.TAG,
                            "Server responded with status code " + 
-                           statusCode1 + " " + statusCode2);
+                           statusCode);
+        }
+      }
+      catch (Exception e)
+      {
+        Log.e(SyncService.TAG, "Exception occured: " + e.getMessage());
+      }
+
+      HubDbHelper tempDb = new HubDbHelper(SyncService.this);
+
+      ArrayList tempDataList =
+        tempDb.getLatestTemperature(Integer.parseInt(latestTempId));
+
+      for (Object data : tempDataList)
+      {
+        Log.i(TAG, "Sending temperature data:\n" + data);
+        updateServer(TEMP_PATH, data.toString());
+      }
+    }
+
+    public void cancel()
+    {
+      // Empty method?
+    }
+  }
+
+  /**
+   * Perform the syncronisation of accelerometer data with the server in a
+   * separate thread.
+   */
+  private class SyncAcc extends Thread
+  {
+    public SyncAcc()
+    {
+      // Empty constructor?
+    }
+
+    public void run()
+    {
+      if (Debug) Log.i(SyncService.TAG, "Start SyncThread.");
+
+      String latestAccId = "";
+      DefaultHttpClient httpClient =
+        new DefaultHttpClient(new BasicHttpParams());
+      HttpConnectionParams.setConnectionTimeout(httpClient.getParams(),
+                                                  CONNECTION_TIMEOUT);
+
+      try
+      {
+        HttpGet getLatestAcc = new HttpGet(LATEST_ACC_PATH);
+        HttpResponse latestAcc = httpClient.execute(getLatestAcc);
+        int statusCode = latestAcc.getStatusLine().getStatusCode();
+
+        if(statusCode == HttpStatus.SC_OK)
+        {
+          HttpEntity httpEntity = latestAcc.getEntity();
+          if(httpEntity != null)
+          {
+            latestAccId = EntityUtils.toString(httpEntity,
+                                               SyncService.CHARSET);
+            latestAccId = latestAccId.replace("\n", "").replace("\r", "");
+            if (Debug) Log.i(SyncService.TAG,
+                             "Latest ID on server is " + latestAccId);
+          }
+          else
+          {
+            if (Debug) Log.i(SyncService.TAG, "Server did not respond.");
+          }
+        }
+
+        else
+        {
+          if (Debug) Log.i(SyncService.TAG,
+                           "Server responded with status code " + 
+                           statusCode);
         }
       }
       catch (Exception e)
@@ -225,24 +282,14 @@ public class SyncService extends Service
       }
 
       HubDbHelper accDb = new HubDbHelper(SyncService.this);
-      HubDbHelper tempDb = new HubDbHelper(SyncService.this);
 
       ArrayList accDataList =
         accDb.getLatestMovement(Integer.parseInt(latestAccId));
-      ArrayList tempDataList =
-        tempDb.getLatestTemperature(Integer.parseInt(latestTempId));
 
-      // Test temp data only for now
-      // for (Object data : accDataList)
-      // {
-      //   Log.i(TAG, "Sending accelerometer data:\n" + data);
-      //   updateServer(ACC_PATH, data.toString());
-      // }
-
-      for (Object data : tempDataList)
+      for (Object data : accDataList)
       {
-        Log.i(TAG, "Sending temperature data:\n" + data);
-        updateServer(TEMP_PATH, data.toString());
+        Log.i(TAG, "Sending accelerometer data:\n" + data);
+        updateServer(ACC_PATH, data.toString());
       }
     }
 
