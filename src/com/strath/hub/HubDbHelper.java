@@ -144,6 +144,14 @@ public class HubDbHelper
   }
 
   /**
+   * 
+   */
+  public synchronized void addLocation(LocationWrapper location)
+  {
+    // Stub.
+  }
+
+  /**
    * Return a JSONArray of all rows in the accelerometer table with an id
    * greater than {@code latestId}
    *
