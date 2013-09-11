@@ -262,7 +262,7 @@ public class HubDbHelper
   }
 
   /**
-   * Return a JSONArray of all rows in the temperature table with an id
+   * Return a JSONArray of all rows in the accelerometer table with an id
    * greater than {@code latestId}
    *
    * @param latestId
@@ -336,6 +336,92 @@ public class HubDbHelper
 
       if (Debug) Log.i(TAG, "Final string:\n" + tempData);
       return tempData;
+    }
+    finally
+    {
+      if (db != null) db.close();
+    }
+  }
+
+  /**
+   * Return a JSONArray of all rows in the location table with an id
+   * greater than {@code latestId}
+   *
+   * @param latestId
+   * @return JSONArray of location samples
+   */
+  public ArrayList getLatestLocation(int latestId)
+  {
+    if (Debug) Log.i(TAG, "getLatestLocation called.");
+
+    ArrayList locData = new ArrayList();
+    SQLiteDatabase db = null;
+    int number_of_rows = 0;
+    int batch_size = BATCH_SIZE;
+    int number_of_batches = 0;
+
+    try
+    {
+      db = dbHelper.getReadableDatabase();
+      Cursor c = db.query(HubDbOpenHelper.LOC_TABLE_NAME,
+                          null,
+                          HubDbOpenHelper.ID + " > " + latestId,
+                          null,
+                          null,
+                          null,
+                          HubDbOpenHelper.ID + " ASC");
+
+      number_of_rows = c.getCount();
+      number_of_batches = number_of_rows / BATCH_SIZE;
+
+      for (int b = 0; b < number_of_batches; b = b + 1)
+      {
+        JSONArray batch = new JSONArray();
+        
+        Cursor bq = 
+          db.query(HubDbOpenHelper.LOC_TABLE_NAME,
+                   null,
+                   HubDbOpenHelper.ID + " BETWEEN " + 
+                     ((b * BATCH_SIZE) + latestId) + 
+                     " AND " + (((b + 1) * BATCH_SIZE) + latestId - 1),
+                   null,
+                   null,
+                   null,
+                   HubDbOpenHelper.ID + " ASC");
+
+        while(bq.moveToNext())
+        {
+          int id = bq.getInt(0);
+          String t = bq.getString(1);
+          String prov = bq.getString(2);
+          float lat = bq.getFloat(3);
+          float lon = bq.getFloat(4);
+          float acc = bq.getFloat(5);
+
+          JSONObject data = new JSONObject();
+
+          try
+          {
+            data.put(HubDbOpenHelper.ID, id);
+            data.put(HubDbOpenHelper.TIMESTAMP, t);
+            data.put(HubDbOpenHelper.PROVIDER, prov);
+            data.put(HubDbOpenHelper.LATITUDE, lat);
+            data.put(HubDbOpenHelper.LONGITUDE, lon);
+            data.put(HubDbOpenHelper.ACCURACY, acc);
+            batch.put(data);
+          }
+          catch (org.json.JSONException e)
+          {
+            Log.e(TAG, "Exception occured.\n" + e.getMessage());
+          }
+        }
+
+        Log.i(TAG, "Batch:\n" + batch);
+        locData.add(batch);
+      }
+
+      if (Debug) Log.i(TAG, "Final string:\n" + locData);
+      return locData;
     }
     finally
     {

@@ -39,6 +39,7 @@ public class SyncService extends Service
   private PowerManager.WakeLock mWakeLock;
   private SyncTemp mSyncTemp;
   private SyncAcc mSyncAcc;
+  private SyncLoc mSyncLoc;
 
   private static final int CONNECTION_TIMEOUT = 10000;
   private static final String LATEST_ACC_PATH =
@@ -81,9 +82,11 @@ public class SyncService extends Service
 
     mSyncTemp = new SyncTemp();
     mSyncAcc = new SyncAcc();
+    mSyncLoc = new SyncLoc();
 
     mSyncTemp.start();
     mSyncAcc.start();
+    mSyncLoc.start();
 
     return 0;
   }
@@ -238,7 +241,7 @@ public class SyncService extends Service
 
     public void run()
     {
-      if (Debug) Log.i(SyncService.TAG, "Start SyncThread.");
+      if (Debug) Log.i(SyncService.TAG, "Start SyncAcc.");
 
       String latestAccId = "";
       DefaultHttpClient httpClient =
@@ -287,6 +290,80 @@ public class SyncService extends Service
         accDb.getLatestMovement(Integer.parseInt(latestAccId));
 
       for (Object data : accDataList)
+      {
+        Log.i(TAG, "Sending accelerometer data:\n" + data);
+        updateServer(ACC_PATH, data.toString());
+      }
+    }
+
+    public void cancel()
+    {
+      // Empty method?
+    }
+  }
+
+  /**
+   * Perform the syncronisation of location data with the server in a
+   * separate thread.
+   */
+  private class SyncLoc extends Thread
+  {
+    public SyncLoc()
+    {
+      // Empty constructor?
+    }
+
+    public void run()
+    {
+      if (Debug) Log.i(SyncService.TAG, "Start SyncThread.");
+
+      String latestLocId = "";
+      DefaultHttpClient httpClient =
+        new DefaultHttpClient(new BasicHttpParams());
+      HttpConnectionParams.setConnectionTimeout(httpClient.getParams(),
+                                                  CONNECTION_TIMEOUT);
+
+      try
+      {
+        HttpGet getLatestLoc = new HttpGet(LATEST_ACC_PATH);
+        HttpResponse latestLoc = httpClient.execute(getLatestLoc);
+        int statusCode = latestLoc.getStatusLine().getStatusCode();
+
+        if(statusCode == HttpStatus.SC_OK)
+        {
+          HttpEntity httpEntity = latestLoc.getEntity();
+          if(httpEntity != null)
+          {
+            latestLocId = EntityUtils.toString(httpEntity,
+                                               SyncService.CHARSET);
+            latestLocId = latestLocId.replace("\n", "").replace("\r", "");
+            if (Debug) Log.i(SyncService.TAG,
+                             "Latest ID on server is " + latestLocId);
+          }
+          else
+          {
+            if (Debug) Log.i(SyncService.TAG, "Server did not respond.");
+          }
+        }
+
+        else
+        {
+          if (Debug) Log.i(SyncService.TAG,
+                           "Server responded with status code " + 
+                           statusCode);
+        }
+      }
+      catch (Exception e)
+      {
+        Log.e(SyncService.TAG, "Exception occured: " + e.getMessage());
+      }
+
+      HubDbHelper locDb = new HubDbHelper(SyncService.this);
+
+      ArrayList locDataList =
+        locDb.getLatestLocation(Integer.parseInt(latestLocId));
+
+      for (Object data : locDataList)
       {
         Log.i(TAG, "Sending accelerometer data:\n" + data);
         updateServer(ACC_PATH, data.toString());
