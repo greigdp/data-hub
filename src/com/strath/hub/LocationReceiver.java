@@ -11,7 +11,7 @@ import android.os.Bundle;
 import android.util.Log;
 
 /**
- * 
+ * Listen for location updates from the {@code LocationManager}
  */
 public class LocationReceiver implements LocationListener
 {
@@ -27,7 +27,7 @@ public class LocationReceiver implements LocationListener
 	Intent intent;
 
   /**
-   * 
+   * Construct a {@code LocationReceiver}.
    */
 	public LocationReceiver(Context context)
 	{
@@ -37,7 +37,9 @@ public class LocationReceiver implements LocationListener
 	}
 
   /**
-   * 
+   * Called when the location has changed.
+   *
+   * @param location The new location, as a Location object.
    */
 	public void onLocationChanged(Location location)
   {

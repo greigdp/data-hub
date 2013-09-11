@@ -3,7 +3,7 @@ package com.strath.hub;
 import android.util.Log;
 
 /**
- * 
+ * An abstraction of location data.
  */
 public class LocationWrapper
 {
@@ -19,6 +19,7 @@ public class LocationWrapper
 
   /**
    * Constructs an object of type {@code LocationWrapper}.
+   *
    * @param timestamp The timestamp of adding the interaction to the
    * interactions db.
    * @param provider The name of the location provider. Can be one of the
