@@ -44,7 +44,6 @@ public class LocationReceiver implements LocationListener
   	if (Debug) Log.i(TAG, "onLocationChanged called.");
 
   	String timestamp
-      // Just fucking shoot me now. 
       = Long.toString(System.currentTimeMillis() / 1000L);
     Bundle extras = location.getExtras();
     String provider

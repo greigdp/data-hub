@@ -128,7 +128,6 @@ public class SyncService extends Service
       StringEntity stringEntity = new StringEntity(data);
       stringEntity.setContentEncoding(new BasicHeader(HTTP.CONTENT_TYPE,
                                       "application/json"));
-      Log.i(TAG, "StringEntity:\n" + stringEntity);
       httpPost.setEntity(stringEntity);
 
       HttpResponse response = httpClient.execute(httpPost);

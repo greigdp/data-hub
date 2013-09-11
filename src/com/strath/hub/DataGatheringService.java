@@ -24,8 +24,8 @@ public class DataGatheringService extends Service
 	private static final boolean Debug = true;
 
 	private final static long SYNC_PERIOD = 
-	  AlarmManager.INTERVAL_FIFTEEN_MINUTES / 15; // Sync every minute.
-  private final static long GPS_UPDATE_PERIOD = 60000; // 5 mins.
+	  AlarmManager.INTERVAL_FIFTEEN_MINUTES / 5; // 3 minutes.
+  private final static long GPS_UPDATE_PERIOD = 60000; // 5 minutes.
   private final static long NETWORK_UPDATE_PERIOD = 60000;
 
 	private AlarmManager mAlarmManager;

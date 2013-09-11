@@ -36,7 +36,7 @@ public class Hub extends Activity
   public static final String CONN_FAIL = "Unable to connect to device";
 
   // Hard code the MAC of the slave. [Fix;me: this should be configurable.]
-  public static final String MAC_ADDRESS = "00:12:06:12:82:84";
+  public static final String MAC_ADDRESS = "00:12:05:31:93:59";
 
   private BluetoothAdapter mBluetoothAdapter = null;
   private BluetoothLinkService mLinkService = null;
@@ -76,7 +76,7 @@ public class Hub extends Activity
     	else
     	{
         if (mLinkService == null) setupLink();
-        // connectDevice();
+        connectDevice();
     	}
     }
   }
@@ -243,12 +243,12 @@ public class Hub extends Activity
             if (Debug) Log.i(TAG, toast);
             if (mLinkService != null)
             {
-              // connectDevice();
+              connectDevice();
             }
             else
             {
               setupLink();
-              // connectDevice();
+              connectDevice();
             }
           }
           break;
