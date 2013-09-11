@@ -44,7 +44,8 @@ public class LocationReceiver implements LocationListener
   	if (Debug) Log.i(TAG, "onLocationChanged called.");
 
   	String timestamp
-  	  = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(new Date());
+      // Just fucking shoot me now. 
+      = Long.toString(System.currentTimeMillis() / 1000L);
     Bundle extras = location.getExtras();
     String provider
       = (extras == null || extras.getString(EXTRAS_KEY) == null)
@@ -58,13 +59,11 @@ public class LocationReceiver implements LocationListener
 
     HubDbHelper db = new HubDbHelper(mContext);
 
-    db.addLocation(new LocationWrapper(
-                                        timestamp, 
-                                        provider, 
-                                        location.getLatitude(),
-                                        location.getLongitude(),
-                                        location.getAccuracy())
-                                      );
+    db.addLocation(new LocationWrapper(timestamp, 
+                                       provider, 
+                                       location.getLatitude(),
+                                       location.getLongitude(),
+                                       location.getAccuracy()) );
     intent = new Intent(LOCATION_ACTION);
     intent.putExtra(LOCATION_DATA, timestamp);
     mContext.sendBroadcast(intent);

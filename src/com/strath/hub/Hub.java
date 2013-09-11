@@ -125,7 +125,7 @@ public class Hub extends Activity
       case REQUEST_CONNECT_DEVICE_SECURE:
       // DeviceListActivity returns with a device to connect to.
         if (resultCode == Activity.RESULT_OK)
-          // connectDevice();
+          connectDevice();
         break;
       case REQUEST_ENABLE_BT:
       // The user turns on Bluetooth.
@@ -243,12 +243,12 @@ public class Hub extends Activity
             if (Debug) Log.i(TAG, toast);
             if (mLinkService != null)
             {
-              connectDevice();
+              // connectDevice();
             }
             else
             {
               setupLink();
-              connectDevice();
+              // connectDevice();
             }
           }
           break;

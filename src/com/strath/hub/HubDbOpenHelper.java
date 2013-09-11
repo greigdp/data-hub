@@ -78,7 +78,7 @@ public class HubDbOpenHelper extends SQLiteOpenHelper
                     + LOC_TABLE_NAME 
                     + " (" 
                     + ID + " integer primary key autoincrement, "
-                    + TIMESTAMP + " datetime, "
+                    + TIMESTAMP + " text, "
                     + PROVIDER + " text, "
                     + LATITUDE + " real, "
                     + LONGITUDE + " real, "

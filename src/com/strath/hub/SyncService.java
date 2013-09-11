@@ -46,10 +46,14 @@ public class SyncService extends Service
     "http://sederunt.org/movements/latest";
   private static final String LATEST_TEMP_PATH =
     "http://sederunt.org/temperatures/latest";
+    private static final String LATEST_LOC_PATH =
+    "http://sederunt.org/locations/latest";
   private static final String ACC_PATH =
     "http://sederunt.org/movements/input";
   private static final String TEMP_PATH =
     "http://sederunt.org/temperatures/input";
+  private static final String LOC_PATH =
+    "http://sederunt.org/locations/input";
   private static final String CHARSET = "UTF-8";
 
   @Override
@@ -153,80 +157,6 @@ public class SyncService extends Service
       return -1;
     }
   }
-  
-  /**
-   * Perform the syncronisation of temperature data to the server in a
-   * separate thread.
-   */
-  private class SyncTemp extends Thread
-  {
-    public SyncTemp()
-    {
-      // Empty constructor.
-    }
-
-    public void run()
-    {
-      if (Debug) Log.i(SyncService.TAG, "Start SyncTemp.");
-
-      String latestTempId = "";
-      DefaultHttpClient httpClient =
-        new DefaultHttpClient(new BasicHttpParams());
-      HttpConnectionParams.setConnectionTimeout(httpClient.getParams(),
-                                                  CONNECTION_TIMEOUT);
-
-      try
-      {
-
-        HttpGet getLatestTemp = new HttpGet(LATEST_TEMP_PATH);
-        HttpResponse latestTemp = httpClient.execute(getLatestTemp);
-        int statusCode = latestTemp.getStatusLine().getStatusCode();
-
-        if(statusCode == HttpStatus.SC_OK)
-        {
-          HttpEntity httpEntity = latestTemp.getEntity();
-          if(httpEntity != null)
-          {
-            latestTempId = EntityUtils.toString(httpEntity,
-                                               SyncService.CHARSET);
-            latestTempId = latestTempId.replace("\n", "").replace("\r", "");
-            if (Debug) Log.i(SyncService.TAG,
-                             "Latest ID on server is " + latestTempId);
-          }
-          else
-          {
-            if (Debug) Log.i(SyncService.TAG, "Server did not respond.");
-          }
-        }
-        else
-        {
-          if (Debug) Log.i(SyncService.TAG,
-                           "Server responded with status code " + 
-                           statusCode);
-        }
-      }
-      catch (Exception e)
-      {
-        Log.e(SyncService.TAG, "Exception occured: " + e.getMessage());
-      }
-
-      HubDbHelper tempDb = new HubDbHelper(SyncService.this);
-
-      ArrayList tempDataList =
-        tempDb.getLatestTemperature(Integer.parseInt(latestTempId));
-
-      for (Object data : tempDataList)
-      {
-        Log.i(TAG, "Sending temperature data:\n" + data);
-        updateServer(TEMP_PATH, data.toString());
-      }
-    }
-
-    public void cancel()
-    {
-      // Empty method?
-    }
-  }
 
   /**
    * Perform the syncronisation of accelerometer data with the server in a
@@ -264,7 +194,7 @@ public class SyncService extends Service
                                                SyncService.CHARSET);
             latestAccId = latestAccId.replace("\n", "").replace("\r", "");
             if (Debug) Log.i(SyncService.TAG,
-                             "Latest ID on server is " + latestAccId);
+                             "Latest acc on server is " + latestAccId);
           }
           else
           {
@@ -303,6 +233,80 @@ public class SyncService extends Service
   }
 
   /**
+   * Perform the syncronisation of temperature data to the server in a
+   * separate thread.
+   */
+  private class SyncTemp extends Thread
+  {
+    public SyncTemp()
+    {
+      // Empty constructor.
+    }
+
+    public void run()
+    {
+      if (Debug) Log.i(SyncService.TAG, "Start SyncTemp.");
+
+      String latestTempId = "";
+      DefaultHttpClient httpClient =
+        new DefaultHttpClient(new BasicHttpParams());
+      HttpConnectionParams.setConnectionTimeout(httpClient.getParams(),
+                                                  CONNECTION_TIMEOUT);
+
+      try
+      {
+
+        HttpGet getLatestTemp = new HttpGet(LATEST_TEMP_PATH);
+        HttpResponse latestTemp = httpClient.execute(getLatestTemp);
+        int statusCode = latestTemp.getStatusLine().getStatusCode();
+
+        if(statusCode == HttpStatus.SC_OK)
+        {
+          HttpEntity httpEntity = latestTemp.getEntity();
+          if(httpEntity != null)
+          {
+            latestTempId = EntityUtils.toString(httpEntity,
+                                               SyncService.CHARSET);
+            latestTempId = latestTempId.replace("\n", "").replace("\r", "");
+            if (Debug) Log.i(SyncService.TAG,
+                             "Latest temp on server is " + latestTempId);
+          }
+          else
+          {
+            if (Debug) Log.i(SyncService.TAG, "Server did not respond.");
+          }
+        }
+        else
+        {
+          if (Debug) Log.i(SyncService.TAG,
+                           "Server responded with status code " + 
+                           statusCode);
+        }
+      }
+      catch (Exception e)
+      {
+        Log.e(SyncService.TAG, "Exception occured: " + e.getMessage());
+      }
+
+      HubDbHelper tempDb = new HubDbHelper(SyncService.this);
+
+      ArrayList tempDataList =
+        tempDb.getLatestTemperature(Integer.parseInt(latestTempId));
+
+      for (Object data : tempDataList)
+      {
+        Log.i(TAG, "Sending temperature data:\n" + data);
+        updateServer(TEMP_PATH, data.toString());
+      }
+    }
+
+    public void cancel()
+    {
+      // Empty method?
+    }
+  }
+
+  /**
    * Perform the syncronisation of location data with the server in a
    * separate thread.
    */
@@ -325,7 +329,7 @@ public class SyncService extends Service
 
       try
       {
-        HttpGet getLatestLoc = new HttpGet(LATEST_ACC_PATH);
+        HttpGet getLatestLoc = new HttpGet(LATEST_LOC_PATH);
         HttpResponse latestLoc = httpClient.execute(getLatestLoc);
         int statusCode = latestLoc.getStatusLine().getStatusCode();
 
@@ -338,7 +342,7 @@ public class SyncService extends Service
                                                SyncService.CHARSET);
             latestLocId = latestLocId.replace("\n", "").replace("\r", "");
             if (Debug) Log.i(SyncService.TAG,
-                             "Latest ID on server is " + latestLocId);
+                             "Latest loc on server is " + latestLocId);
           }
           else
           {
@@ -365,8 +369,8 @@ public class SyncService extends Service
 
       for (Object data : locDataList)
       {
-        Log.i(TAG, "Sending accelerometer data:\n" + data);
-        updateServer(ACC_PATH, data.toString());
+        Log.i(TAG, "Sending location data:\n" + data);
+        updateServer(LOC_PATH, data.toString());
       }
     }
 
