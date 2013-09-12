@@ -25,8 +25,8 @@ public class DataGatheringService extends Service
 
 	private final static long SYNC_PERIOD = 
 	  AlarmManager.INTERVAL_FIFTEEN_MINUTES / 5; // 3 minutes.
-  private final static long GPS_UPDATE_PERIOD = 60000; // 5 minutes.
-  private final static long NETWORK_UPDATE_PERIOD = 60000;
+  private final static long GPS_UPDATE_PERIOD = 300000; // 5 minutes.
+  private final static long NETWORK_UPDATE_PERIOD = 300000;
 
 	private AlarmManager mAlarmManager;
 	private Intent mSyncIntent;
