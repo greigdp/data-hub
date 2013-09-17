@@ -170,9 +170,9 @@ public class BluetoothLinkService
   /** Notify the UI activity that a connection attempt failed. */
   private void connectionFailed()
   {
-    Message msg = mHandler.obtainMessage(Hub.MESSAGE_TOAST);
+    Message msg = mHandler.obtainMessage(Hub.MESSAGE_ERROR);
     Bundle bundle = new Bundle();
-    bundle.putString(Hub.TOAST, "Unable to connect to device");
+    bundle.putString(Hub.ERROR, "Unable to connect to device");
     msg.setData(bundle);
     mHandler.sendMessage(msg);
   }
@@ -182,9 +182,9 @@ public class BluetoothLinkService
    */
   private void connectionLost()
   {
-    Message msg = mHandler.obtainMessage(Hub.MESSAGE_TOAST);
+    Message msg = mHandler.obtainMessage(Hub.MESSAGE_ERROR);
     Bundle bundle = new Bundle();
-    bundle.putString(Hub.TOAST, "Connection lost");
+    bundle.putString(Hub.ERROR, "Connection lost");
     msg.setData(bundle);
     mHandler.sendMessage(msg);
   }

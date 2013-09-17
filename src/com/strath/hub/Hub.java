@@ -25,13 +25,13 @@ public class Hub extends Activity
   public static final int MESSAGE_READ  = 2;
   public static final int MESSAGE_WRITE = 3;
   public static final int MESSAGE_DEVICE_NAME = 4;
-  public static final int MESSAGE_TOAST = 5;
+  public static final int MESSAGE_ERROR = 5;
 
   private static final int REQUEST_CONNECT_DEVICE_SECURE = 1;
   private static final int REQUEST_ENABLE_BT = 2;
 
   public static final String DEVICE_NAME = "device name";
-  public static final String TOAST = "toast";
+  public static final String ERROR = "toast";
   public static final String CONN_LOST = "Connection lost";
   public static final String CONN_FAIL = "Unable to connect to device";
 
@@ -233,14 +233,11 @@ public class Hub extends Activity
                          mConnectedDeviceName,
                          Toast.LENGTH_LONG).show();
           break;
-        case MESSAGE_TOAST:
-          String toast = msg.getData().getString(TOAST);
-          Toast.makeText(Hub.this,
-                         toast,
-                         Toast.LENGTH_SHORT).show();
-          if (toast.equals(CONN_LOST) || toast.equals(CONN_FAIL))
+        case MESSAGE_ERROR:
+          String message = msg.getData().getString(ERROR);
+          if (message.equals(CONN_LOST) || message.equals(CONN_FAIL))
           {
-            if (Debug) Log.i(TAG, toast);
+            if (Debug) Log.i(TAG, message);
             if (mLinkService != null)
             {
               connectDevice();
