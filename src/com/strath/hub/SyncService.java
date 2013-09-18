@@ -165,7 +165,7 @@ public class SyncService extends Service
   {
     public SyncAcc()
     {
-      // Empty constructor?
+      // Empty constructor.
     }
 
     public void run()
@@ -227,7 +227,7 @@ public class SyncService extends Service
 
     public void cancel()
     {
-      // Empty method?
+      // Empty method.
     }
   }
 
@@ -301,7 +301,7 @@ public class SyncService extends Service
 
     public void cancel()
     {
-      // Empty method?
+      // Empty method.
     }
   }
 
@@ -313,7 +313,7 @@ public class SyncService extends Service
   {
     public SyncLoc()
     {
-      // Empty constructor?
+      // Empty constructor.
     }
 
     public void run()
@@ -375,7 +375,7 @@ public class SyncService extends Service
 
     public void cancel()
     {
-      // Empty method?
+      // Empty method.
     }
   }
 }
