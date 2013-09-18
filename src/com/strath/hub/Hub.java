@@ -9,6 +9,8 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
 import android.util.Log;
+import android.view.Menu;
+import android.view.MenuInflater;
 import android.widget.Toast;
 import android.widget.TextView;
 
@@ -115,6 +117,14 @@ public class Hub extends Activity
 
     stopGatheringData();
   }
+
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        // Inflate the menu items for use in the action bar
+        MenuInflater inflater = getMenuInflater();
+        inflater.inflate(R.menu.main_action_bar, menu);
+        return super.onCreateOptionsMenu(menu);
+    }
 
   public void onActivityResult(int requestCode, int resultCode, Intent data)
   {
