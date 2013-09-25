@@ -294,8 +294,8 @@ public class SyncService extends Service
 
       for (Object data : tempDataList)
       {
-        Log.i(TAG, "Sending temperature data:\n" + data);
-        updateServer(TEMP_PATH, data.toString());
+        Log.i(TAG, "DEBUG: NOT Sending temperature data:\n" + data);
+        //updateServer(TEMP_PATH, data.toString());
       }
     }
 
