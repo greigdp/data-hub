@@ -1,5 +1,28 @@
 <?xml version="1.0" encoding="utf-8"?>
 
 <PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android">
+    <PreferenceCategory
+        android:summary="Connection Settings"
+        android:title="Bluetooth Datalogger" >
+        <EditTextPreference
+            android:key="clientmac"
+            android:summary="Set Datalogger MAC Address"
+            android:title="Datalogger MAC Address" />
+    </PreferenceCategory>
 
+    <PreferenceCategory
+        android:summary="Configure Datalogger For Patient"
+        android:title="Configure Patient" >
+        <!-- <CheckBoxPreference
+            android:key="checkBox"
+            android:summary="On/Off"
+            android:title="Keep me logged in" />
+
+        <ListPreference
+            android:entries="@array/listOptions"
+            android:entryValues="@array/listValues"
+            android:key="listpref"
+            android:summary="List preference example"
+            android:title="List preference" /> -->
+    </PreferenceCategory>
 </PreferenceScreen>

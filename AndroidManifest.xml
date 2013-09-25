@@ -20,6 +20,9 @@
         <category android:name="android.intent.category.LAUNCHER" />
       </intent-filter>
     </activity>
+      <activity android:name="PreferencesActivity"
+          android:label="@string/app_name">
+          </activity>
     <service android:name="com.strath.hub.BluetoothLinkService">
     </service>
     <service android:name="com.strath.hub.DataGatheringService">
