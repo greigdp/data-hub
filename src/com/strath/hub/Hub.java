@@ -4,18 +4,17 @@ import android.app.ActionBar;
 import android.app.Activity;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
-import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
-import android.preference.PreferenceManager;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuInflater;
-import android.widget.Toast;
+import android.view.MenuItem;
 import android.widget.TextView;
+import android.widget.Toast;
 
 /** 
  * The main activity and entry-point of the app.
@@ -127,6 +126,20 @@ public class Hub extends Activity
         MenuInflater inflater = getMenuInflater();
         inflater.inflate(R.menu.main_action_bar, menu);
         return super.onCreateOptionsMenu(menu);
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        // Handle item selection
+        switch (item.getItemId()) {
+            case R.id.action_settings:
+                Intent intent = new Intent(Hub.this,
+                        PreferencesActivity.class);
+                startActivity(intent);
+                return true;
+            default:
+                return super.onOptionsItemSelected(item);
+        }
     }
 
   public void onActivityResult(int requestCode, int resultCode, Intent data)
