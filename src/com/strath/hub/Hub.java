@@ -4,10 +4,13 @@ import android.app.ActionBar;
 import android.app.Activity;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
+import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
+import android.preference.PreferenceManager;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuInflater;
@@ -200,10 +203,38 @@ public class Hub extends Activity
    */
   private void connectDevice()
   {
+    String clientMacAddress = "";
+
   	if (Debug) Log.i(TAG, "connectDevice called");
-    // Create a Bluetooth device representing the slave and connect to it.
-    BluetoothDevice device = mBluetoothAdapter.getRemoteDevice(MAC_ADDRESS);
-    mLinkService.connect(device);
+     // Open a connection to the application's
+      try {
+          SharedPreferences myPrefs = this.getSharedPreferences("com.strath.hub", MODE_PRIVATE);
+          clientMacAddress = myPrefs.getString("client_mac", null);
+          if (clientMacAddress != null)
+          {
+              // Create a Bluetooth device representing the slave and connect to it.
+              BluetoothDevice device = mBluetoothAdapter.getRemoteDevice(clientMacAddress);
+              mLinkService.connect(device);
+          }
+          else
+          {
+              // Null MAC address stored
+              Log.w(TAG, "No MAC address found - likely this is the first run of the app");
+              TextView display_bt_data = (TextView) findViewById(R.id.bt_data);
+              display_bt_data.setText("No bluetooth MAC set!");
+              Intent intent = new Intent(Hub.this,
+                      PreferencesActivity.class);
+              startActivity(intent);
+          }
+      } catch (Exception NullPointerException)
+      {
+          Log.w(TAG, "Shared preferences database NPE - likely this is the first run of the app");
+          TextView display_bt_data = (TextView) findViewById(R.id.bt_data);
+          display_bt_data.setText("No bluetooth MAC set!");
+      }
+
+
+
   }
 
   // Handler to receive information from the BluetoothLinkService

@@ -7,7 +7,8 @@
         <EditTextPreference
             android:key="clientmac"
             android:summary="Set Datalogger MAC Address"
-            android:title="Datalogger MAC Address" />
+            android:title="Datalogger MAC Address"
+            android:persistent="true"/>
     </PreferenceCategory>
 
     <PreferenceCategory
