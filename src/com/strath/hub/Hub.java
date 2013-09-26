@@ -9,6 +9,7 @@ import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
+import android.preference.PreferenceManager;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuInflater;
@@ -221,8 +222,8 @@ public class Hub extends Activity
   	if (Debug) Log.i(TAG, "connectDevice called");
      // Open a connection to the application's
       try {
-          SharedPreferences myPrefs = this.getSharedPreferences("com.strath.hub", MODE_PRIVATE);
-          clientMacAddress = myPrefs.getString("client_mac", null);
+          SharedPreferences myPrefs = PreferenceManager.getDefaultSharedPreferences(this);
+          clientMacAddress = myPrefs.getString("clientmac", null);
           if (clientMacAddress != null)
           {
               // Create a Bluetooth device representing the slave and connect to it.
@@ -232,7 +233,7 @@ public class Hub extends Activity
           else
           {
               // Null MAC address stored
-              Log.w(TAG, "No MAC address found - likely this is the first run of the app");
+              Log.w(TAG, "No MAC address found in settings - likely this is the first run of the app");
               TextView display_bt_data = (TextView) findViewById(R.id.bt_data);
               display_bt_data.setText("No bluetooth MAC set!");
               Intent intent = new Intent(Hub.this,
@@ -241,9 +242,9 @@ public class Hub extends Activity
           }
       } catch (Exception NullPointerException)
       {
-          Log.w(TAG, "Shared preferences database NPE - likely this is the first run of the app");
+          Log.w(TAG, "NPE during Bluetooth Config - likely this is the first run of the app");
           TextView display_bt_data = (TextView) findViewById(R.id.bt_data);
-          display_bt_data.setText("No bluetooth MAC set!");
+          display_bt_data.setText("Exception in Bluetooth connection!");
       }
 
 
