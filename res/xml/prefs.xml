@@ -12,8 +12,21 @@
     </PreferenceCategory>
 
     <PreferenceCategory
+        android:key="patient"
         android:summary="Configure Datalogger For Patient"
         android:title="Configure Patient" >
+
+        <EditTextPreference
+        android:key="devicestatus"
+        android:summary="Device Status Unknown"
+        android:title="Device Checkout Status"
+        android:persistent="false"/>
+
+        <EditTextPreference
+            android:key="patientid"
+            android:summary="Checkout device to patient"
+            android:title="Set Patient ID"
+            android:persistent="true"/>
         <!-- <CheckBoxPreference
             android:key="checkBox"
             android:summary="On/Off"
