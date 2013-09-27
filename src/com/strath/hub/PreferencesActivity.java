@@ -6,6 +6,7 @@ import android.preference.Preference;
 import android.preference.PreferenceActivity;
 import android.preference.PreferenceFragment;
 import android.preference.PreferenceGroup;
+import android.util.Log;
 import android.view.MenuItem;
 
 /**
@@ -82,6 +83,15 @@ public class PreferencesActivity extends PreferenceActivity
                 deviceStatus.setShouldDisableView(false);
             }
 
+            Preference patientID = findPreference("patientid");
+            patientID.setOnPreferenceChangeListener(new EditTextPreference.OnPreferenceChangeListener() {
+                public boolean onPreferenceChange(final Preference preference, final Object newValue) {
+                    Log.d("Hub", "Patient ID Changed to " + newValue.toString());
+                    return true;
+                }
+            });
+
         }
+
     }
 }
