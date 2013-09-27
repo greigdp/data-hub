@@ -227,7 +227,7 @@ public class Hub extends Activity
           if (clientMacAddress != null)
           {
               // Create a Bluetooth device representing the slave and connect to it.
-              BluetoothDevice device = mBluetoothAdapter.getRemoteDevice(clientMacAddress);
+              BluetoothDevice device = mBluetoothAdapter.getRemoteDevice(formatMacAddress(clientMacAddress));
               mLinkService.connect(device);
           }
           else
@@ -319,5 +319,37 @@ public class Hub extends Activity
   {
     final ActionBar actionBar = getActionBar();
     actionBar.setSubtitle(subTitle);
+  }
+
+
+    /**
+     * Accepts user-supplied MAC address, and format it to be colon-separated if needed
+     * @param storedMAC The user-supplied MAC address of the datalogger
+     * @return The colon-separated, correctly formatted MAC if valid, null
+     *         otherwise! (will give a handledNPE)
+     */
+  private String formatMacAddress(String storedMAC)
+  {
+
+    String outputMAC = "";
+    // First let's try to figure out what the user has given us!
+    if (storedMAC.matches("^([0-9a-fA-F][0-9a-fA-F]:){5}([0-9a-fA-F][0-9a-fA-F])$"))
+      {
+          // MAC is in colon separated form, no action required
+          return storedMAC;
+      }
+      else if (storedMAC.matches("^([0-9a-fA-F]){12}$"))
+        {
+          outputMAC = storedMAC;
+          // MAC is in non-separated form, must add colons
+              for (int macposition = 2 ; macposition < storedMAC.length()+4 ;  macposition = macposition+3)
+              {
+                  outputMAC = new StringBuilder(outputMAC).insert(macposition, ":").toString();
+                  // MAC should be in colon delimited form
+              }
+            return outputMAC;
+        }
+      // if all else has failed, return null, as MAC is invalid!
+      return null;
   }
 }
